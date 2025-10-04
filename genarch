@@ -2,7 +2,8 @@
 
 arguments=$*
 eval `cclargs_lite $0 \
-  -opath "${HOME}/forecasts" "" "[Output path for project grib files]"\
+  -opath "${HOME}/local/hpfx/forecasts" "" "[Output path for project grib files]"\
+  -no_check "0" "1" "[Do not check for a complete dataset]"\
     ++ $arguments`
 if [[ $# -lt 1 ]] ; then
     echo "USAGE: ${0} [-options] PROTOTYPE_FILE" 1>&2
@@ -20,6 +21,35 @@ cccc=${comp[2]}
 mm=${comp[4]}
 ii=${comp[5]}
 ll=${comp[6]}
+
+# Confirm that the dataset is complete
+checkdates(){
+
+    # Compile list of expected dates
+    dat=${year}0101
+    unset dlist
+    while [[ ${dat} -lt $((${year} + 1))0101 ]] ; do
+	dlist="${dlist} ${dat}"
+        dat=$(date +%Y%m%d -d "${dat} + 3 day")
+    done
+
+    # Confirm that a forecast exists for each date
+    missing_files=0
+    for dat in ${dlist} ; do
+	fbase="${proj}_${sss}_${cccc}_${dat}00_${mm}_${ii}_${ll}"
+	if [[ $(find $(dirname ${infile}) -type f -name "${fbase}.grib*" | wc -l) -lt 1 ]] ; then
+	    echo "Missing initialization ${fbase}" 1>&2
+	    missing_files=$((${missing_files} + 1))
+	fi
+    done
+
+    # Abort if any files are missing
+    if [[ ${missing_files} -gt 0 ]] ; then
+	echo "${missing_files} forecasts are missing from the dataset ... aborting" 1>&2
+	exit 1
+    fi
+  
+}
 
 # Split processing of grib files by month
 gribmonth(){
@@ -103,6 +133,9 @@ gribcat(){
     cat ${workdir}/${var}_${levname}*.grib* >${ofile}
 
 }
+
+# Check for a complete dataset
+if [[ ${no_check} -lt 1 ]] ; then checkdates ; fi
 
 # Process months
 for nn in $(printf "%02d\n" $(seq 1 12)) ; do
