@@ -4,6 +4,7 @@ arguments=$*
 eval `cclargs_lite $0 \
   -opath "${HOME}/local/hpfx/forecasts" "" "[Output path for project grib files]"\
   -no_check "0" "1" "[Do not check for a complete dataset]"\
+  -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
 if [[ $# -lt 1 ]] ; then
     echo "USAGE: ${0} [-options] PROTOTYPE_FILE" 1>&2
@@ -81,7 +82,7 @@ EOF
 
     # Process initializations into separate files
     for fcst in ${fcstlist} ; do
-	echo "Filtering ${fcst} into ${workdir}"
+	if [[ ${v} -gt 0 ]] ; then echo "Filtering ${fcst} into ${workdir}" ; fi
 	grib_filter ${filt} ${fcst}
     done
     
@@ -108,7 +109,7 @@ EOF
     done #variables
 
     # Work directory cleanup
-    echo "Removing working directory ${workdir}"
+    if [[ ${v} -gt 0 ]] ; then echo "Removing working directory ${workdir}" ; fi
     rm -fr ${workdir}
     
 }
@@ -129,7 +130,7 @@ gribcat(){
     mkdir -p $(dirname ${ofile})
 
     # Concatenate matching inputs into final grib file
-    echo "Concatenating into ${ofile}"
+    if [[ ${v} -gt 0 ]] ; then echo "Concatenating into ${ofile}" ; fi
     cat ${workdir}/${var}_${levname}*.grib* >${ofile}
 
 }
