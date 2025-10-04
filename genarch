@@ -4,6 +4,7 @@ arguments=$*
 eval `cclargs_lite $0 \
   -opath "${HOME}/local/hpfx/forecasts" "" "[Output path for project grib files]"\
   -no_check "0" "1" "[Do not check for a complete dataset]"\
+  -check_only "0" "1" "[Perform only checks for dataset completeness]"\
   -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
 if [[ $# -lt 1 ]] ; then
@@ -45,7 +46,7 @@ checkdates(){
     done
 
     # Abort if any files are missing
-    if [[ ${missing_files} -gt 0 ]] ; then
+    if [[ ${missing_files} -gt 0 && ${check_only} -eq 0 ]] ; then
 	echo "${missing_files} forecasts are missing from the dataset ... aborting" 1>&2
 	exit 1
     fi
@@ -62,7 +63,8 @@ gribmonth(){
 	echo "No file found for month ${nn} ... skipping" 1>&2
 	return
     fi
-
+    if [[ ${check_only} -gt 0 ]] ; then return ; fi
+    
     # Create clean working directory
     workdir=${HOME}/local/hpfx/work/${sss}/${cccc}/${mm}_${ii}/${ll}/${nn}
     rm -fr ${workdir}
