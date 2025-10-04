@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+
+arguments=$*
+eval `cclargs_lite $0 \
+  -opath "${HOME}/forecasts" "" "[Output path for project grib files]"\
+    ++ $arguments`
+if [[ $# -lt 1 ]] ; then
+    echo "USAGE: ${0} [-options] PROTOTYPE_FILE" 1>&2
+    exit 1
+else
+    infile=${1}
+fi
+
+# Split prototype input file for component information
+IFS='_.' read -ra comp <<< $(basename ${infile})
+year=2024
+proj=${comp[0]}
+sss=${comp[1]}
+cccc=${comp[2]}
+mm=${comp[4]}
+ii=${comp[5]}
+ll=${comp[6]}
+
+# Split processing of grib files by month
+gribmonth(){
+    nn=${1}
+
+    # Identify candidate files for filtering
+    fcstlist=$(find $(dirname ${infile}) -type f -name "${proj}_${sss}_${cccc}_${year}${nn}*_${mm}_${ii}_${ll}.grib*")
+    if [[ -z "${fcstlist}" ]] ; then
+	echo "No file found for month ${nn} ... skipping" 1>&2
+	return
+    fi
+
+    # Create clean working directory
+    workdir=${HOME}/local/hpfx/work/${sss}/${cccc}/${mm}_${ii}/${ll}/${nn}
+    rm -fr ${workdir}
+    mkdir -p ${workdir}
+
+    # Create an appropriate filtering file
+    filt=${workdir}/rules.filter
+    if [[ ${ll} == sl ]] ; then
+	cat > ${filt} <<EOF
+write "${workdir}/[shortName]_[date].grib[editionNumber]";
+EOF
+    else
+	cat > ${filt} <<EOF
+write "${workdir}/[shortName]_[level]_[date].grib[editionNumber]";
+EOF
+    fi
+
+    # Process initializations into separate files
+    for fcst in ${fcstlist} ; do
+	echo "Filtering ${fcst} into ${workdir}"
+	grib_filter ${filt} ${fcst}
+    done
+    
+    # Concatenate into monthly file
+    vars=$(find ${workdir} -type f -name "*.grib*" -printf "%f\n" | cut -d "_" -f 1 | sort | uniq)
+    unset levs
+    if [[ ${ll} != sl ]] ; then
+	levs=$(find ${workdir} -type f -name "*.grib*" -printf "%f\n" | cut -d "_" -f 2 | sort | uniq)
+    fi    
+
+    # Process variables
+    for var in ${vars} ; do
+	ofile=${var}_${sss}_${cccc}_${nn}_${mm}_${ii}_${ll}.grib2
+	
+	# Process levels
+	if [[ ${#levs} -gt 0 ]] ; then
+	    for lev in ${levs[*]} ; do
+		gribcat ${workdir} ${var} ${lev}
+	    done
+	else
+	    gribcat ${workdir} ${var}
+	fi
+	
+    done #variables
+
+    # Work directory cleanup
+    echo "Removing working directory ${workdir}"
+    rm -fr ${workdir}
+    
+}
+
+# Concatenate grib files
+gribcat(){
+    workdir=${1}
+    var=${2}
+    lev=${3}
+
+    # Adjust processing for pressure-level files
+    unset levname
+    if [[ -n "${lev}" ]] ; then levname=${lev}_ ; fi
+
+    # Create final archive structure
+    fullpath=${opath}/${sss}/${cccc}/${mm}_${ii}/${var}
+    ofile=${fullpath}/${var}_${levname}${sss}_${cccc}_${nn}_${mm}_${ii}_${ll}.grib2
+    mkdir -p $(dirname ${ofile})
+
+    # Concatenate matching inputs into final grib file
+    echo "Concatenating into ${ofile}"
+    cat ${workdir}/${var}_${levname}*.grib* >${ofile}
+
+}
+
+# Process months
+for nn in $(printf "%02d\n" $(seq 1 12)) ; do
+
+    # Split forecast files in parallel
+    gribmonth ${nn} &
+
+done
+wait
