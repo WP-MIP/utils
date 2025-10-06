@@ -8,7 +8,7 @@ eval `cclargs_lite $0 \
   -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
 if [[ $# -lt 1 ]] ; then
-    echo "USAGE: ${0} [-options] PROTOTYPE_FILE" 1>&2
+    echo "USAGE: ${0} PROTOTYPE_FILE [-options]" 1>&2
     exit 1
 else
     infile=${1}
