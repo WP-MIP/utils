@@ -128,7 +128,7 @@ gribcat(){
 
     # Create final archive structure
     fullpath=${opath}/${sss}/${cccc}/${mm}_${ii}/${var}
-    ofile=${fullpath}/${var}_${levname}${sss}_${cccc}_${nn}_${mm}_${ii}_${ll}.grib2
+    ofile=${fullpath}/${var}_${levname}${sss}_${cccc}_${nn}_${ii}_${ll}_${mm}.grib2
     mkdir -p $(dirname ${ofile})
 
     # Concatenate matching inputs into final grib file
