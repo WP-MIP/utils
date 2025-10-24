@@ -1,0 +1,14 @@
+#!/usr/bin/env ksh
+
+packit(){
+  thisdir=${1}
+  for file in $(find ${thisdir} -name "*.grib2"); do
+    nice grib_set -r -s bitsPerValue=16 ${file} ${file}.16
+    mv ${file}.16 ${file}
+  done
+}
+
+for dir in gh t q u v ; do
+  packit ${dir} &
+done
+wait
