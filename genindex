@@ -1,5 +1,5 @@
 #!/gpfs/fs3c/eccc/mrd/rpnatm/swpm001/installed/venv/bin/python
-import glob, os, re
+import glob, os, re, sys
 from datetime import datetime
 
 # Contributor name mapping
@@ -29,6 +29,9 @@ def allContrib(base, stream):
     return(outstr)
 
 def getContrib(base, stream, testfld):
+    if not os.path.exists(base):
+        sys.stderr.write('Cannot find '+base+'.  Run this application from the hpfx server.\n')
+        sys.exit(1)
     dirs = glob.glob(os.path.join(base, stream, '*/*', testfld), recursive=True)
     contrib = {}
     for dir in dirs:
