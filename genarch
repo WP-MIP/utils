@@ -148,3 +148,6 @@ for nn in $(printf "%02d\n" $(seq 1 12)) ; do
 
 done
 wait
+
+# Update archive tables
+genindex
