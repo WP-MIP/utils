@@ -1,0 +1,82 @@
+#!/gpfs/fs3c/eccc/mrd/rpnatm/swpm001/installed/venv/bin/python
+import glob, os, re
+from datetime import datetime
+
+# Contributor name mapping
+namemap = {'cwao':'ECCC', 'ecmf':'ECMWF', 'kwbc':'NCEP', 'rksl':'KMA/KIAPS', 'ammc':'BoM',
+           'babj':'CMA', 'sbsj':'CPTEC', 'edzw':'DWD', 'vabb':'IMD', 'rjtd':'JMA',
+           'egrr':'UKMO', 'enmi':'MetNo', 'rums':'RAS'}
+
+# Basic setup
+base = '/home/swpm001/public_html/WP-MIP/forecasts'
+html_path = '/home/swpm001/public_html/WP-MIP'
+test_pl = 'gh'
+test_sl = '2t'
+model_defaults = {'ai':'-', 'hy':'-', 'pm':'-'}
+
+def allContrib(base, stream):
+    contrib_pl = getContrib(base, stream, test_pl)
+    contrib_sl = getContrib(base, stream, test_sl)
+    contrib = joinContrib(contrib_pl, contrib_sl)
+    outstr = ''
+    for centre in sorted(contrib.keys()):
+        try:
+            name = namemap[centre]
+        except KeyError:
+            name = centre
+        c = contrib[centre]
+        outstr += '<tr><td>'+centre+'</td><td>'+name+addtd(c['pl'])+addtd(c['sl'])+'\n'
+    return(outstr)
+
+def getContrib(base, stream, testfld):
+    dirs = glob.glob(os.path.join(base, stream, '*/*', testfld), recursive=True)
+    contrib = {}
+    for dir in dirs:
+        path = re.split('/', dir)
+        (ty, ver) = re.split('_', path[-2])
+        centre = path[-3]
+        if centre not in contrib.keys(): contrib[centre] = {}
+        try:
+            contrib[centre][ty] += ', v'+ver
+        except KeyError:
+            contrib[centre][ty] = 'v'+ver
+    for centre in contrib.keys():
+        for ty in model_defaults.keys():
+            if ty not in contrib[centre]: contrib[centre][ty] = '-'
+    return(contrib)
+
+def joinContrib(cpl, csl):
+    contrib = {}
+    for centre in set(list(cpl.keys()) + list(csl.keys())):
+        try:
+            pl = cpl[centre]
+        except KeyError:
+            pl = model_defaults
+        try:
+            sl = csl[centre]
+        except KeyError:
+            sl = model_defaults
+        contrib[centre] = {'pl':pl, 'sl':sl}
+    return(contrib)
+
+def addtd(d):
+    tdstr = ''
+    for ty in sorted(model_defaults):
+        tdstr += '<td>'+d[ty]+'</td>'
+    return(tdstr)
+
+
+# OIC Contributions
+oicstr = allContrib(base, 'oic')
+
+# SIC Contributions
+sicstr = allContrib(base, 'sic')
+
+# Create new index file
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tmpl'), "rt") as fdin:
+    with open(os.path.join(html_path, 'index.html'), "wt") as fdout:
+        for line in fdin:
+            line1 = line.replace('OIC_TABLE_DATA', oicstr)
+            line2 = line1.replace('SIC_TABLE_DATA', sicstr)
+            line3 = line2.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
+            fdout.write(line3)
