@@ -58,7 +58,7 @@ def getContrib(base, stream, testfld):
             path = os.path.join(exp, os.path.basename(base), centre)
             if centre not in contrib.keys():
                 contrib[centre] = defaultdict(dict)
-            contrib[centre] = {'pm':{'link':'<a href="'+path+'">Available</a>', 'path':path}}
+            contrib[centre] = {'pm':{'link':'<a href="'+path+'">Available</a>', 'path':[path]}}
         for centre in contrib.keys():
             contrib[centre] = dict(contrib[centre])
     else:
@@ -73,15 +73,14 @@ def getContrib(base, stream, testfld):
                 contrib[centre] = defaultdict(dict)
             try:
                 contrib[centre][ty]['link'] += ', <a href="'+path+'">v'+ver+'</a>'
-                contrib[centre][ty]['path'] = path
+                contrib[centre][ty]['path'].append(path)
             except KeyError:
                 contrib[centre][ty] = defaultdict(dict)
-                contrib[centre][ty]['link'] = '<a href="'+path+'">v'+ver+'</a>'
-                contrib[centre][ty]['path'] = path
+                contrib[centre][ty] = {'link':'<a href="'+path+'">v'+ver+'</a>', 'path':[path]}
         for centre in contrib.keys():
             for ty in model_defaults.keys():
                 if ty not in contrib[centre]:
-                    contrib[centre][ty] = {'link':'-', 'path':None}
+                    contrib[centre][ty] = {'link':'-', 'path':[]}
             contrib[centre] = dict(contrib[centre])
     return(dict(contrib))
 
