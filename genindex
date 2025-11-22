@@ -169,9 +169,11 @@ def pathIndex(paths):
     for p in paths:
         pitems = re.split('/', p)
         centre = pitems[-2]
+        dlist = os.path.listdir(p)
         for lev in levmap.keys():
+            vars = [dir for dir in dlist if dir in varmap.keys()]
+            print(vars)
             with open(os.path.join(html_path, p, 'index_'+lev+'.html'), "w") as fdout:
-                print(levmap[lev])
                 for line in inlines:
                     tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], 'Forecasts</h1></center>'])
                     line = line.replace('TITLE', tmpstr)
