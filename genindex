@@ -28,7 +28,9 @@ html_path = '/home/swpm001/public_html'
 test_pl = 'gh'
 test_sl = '2t'
 model_defaults = defaultdict(dict)
-model_defaults = dict({'ai':{'link':'-'}, 'hy':{'link':'-'}, 'pm':{'link':'-'}})
+model_defaults = dict({'ai':{'link':'-', 'path':[]},
+                       'hy':{'link':'-', 'path':[]},
+                       'pm':{'link':'-', 'path':[]}})
 
 class Contrib(dict):
 
@@ -37,6 +39,7 @@ class Contrib(dict):
         contrib_sl = self._getContrib(base, stream, test_sl)    
         contrib = self._joinContrib(contrib_pl, contrib_sl)    
         outstr = ''
+        paths = []
         for centre in sorted(contrib.keys()):
             try:
                 name = namemap[centre]['name']
@@ -44,6 +47,8 @@ class Contrib(dict):
                 name = centre
             c = contrib[centre]
             outstr += '<tr><td>'+centre+'</td><td>'+name+self._addtd(c['pl'])+self._addtd(c['sl'])+'\n'
+            self._addpath(c['pl'])
+            self._addpath(c['sl'])
         self.outstr = outstr
 
     def _getContrib(self, base, stream, testfld):
@@ -107,6 +112,13 @@ class Contrib(dict):
             except KeyError:
                 pass
         return(tdstr)
+
+    def _addpath(self, p):
+        for ty in model_defaults:
+            try:
+                print(p[ty])
+            except KeyError:
+                pass
 
 
 # OIC Contributions
