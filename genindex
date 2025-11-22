@@ -3,11 +3,24 @@ import glob, os, re, sys
 from datetime import datetime
 
 # Contributor name mapping
-namemap = {'cwao':'ECCC', 'ecmf':'ECMWF', 'kwbc':'NCEP', 'rksl':'KMA/KIAPS', 'ammc':'BoM',
-           'babj':'CMA', 'sbsj':'CPTEC', 'edzw':'DWD', 'vabb':'IMD', 'rjtd':'JMA',
-           'egrr':'UKMO', 'enmi':'MetNo', 'rums':'RAS'}
+from collections import defaultdict
+namemap = defaultdict(dict)
+namemap = {'cwao':{'name':'ECCC', 'long':'ECCC'},
+           'ecmf':{'name':'ECMWF', 'long':'ECMWF'},
+           'kwbc':{'name':'NOAA', 'long':'NOAA'},
+           'rksl':{'name':'KMA/KIAPS', 'long':'KMA_KIAPS'},
+           'ammc':{'name':'BoM', 'long':'BoM'},
+           'babj':{'name':'CMA', 'long':'CMA'},
+           'sbsj':{'name':'CPTEC', 'long':'CPTEC_INPE'},
+           'edzw':{'name':'DWD', 'long':'DWD'},
+           'vabb':{'name':'IMD', 'long':'IMD'},
+           'rjtd':{'name':'JMA', 'long':'JMA'},
+           'egrr':{'name':'UKMO', 'long':'UKMO'},
+           'enmi':{'name':'MetNo', 'long':'MetNo'},
+           'rums':{'name':'RAS', 'long':'RAS'}}
 
 # Basic setup
+ofile='index_test.html'
 exp = 'WP-MIP'
 base = os.path.join('/home/swpm001/public_html', exp)
 fbase = os.path.join(base, 'forecasts')
@@ -23,7 +36,7 @@ def allContrib(base, stream):
     outstr = ''
     for centre in sorted(contrib.keys()):
         try:
-            name = namemap[centre]
+            name = namemap[centre]['name']
         except KeyError:
             name = centre
         c = contrib[centre]
@@ -95,7 +108,7 @@ anlstr = allContrib(os.path.join(base, 'analyses'), None)
 
 # Create new index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tmpl'), "rt") as fdin:
-    with open(os.path.join(html_path, 'index.html'), "wt") as fdout:
+    with open(os.path.join(html_path, ofile), "wt") as fdout:
         for line in fdin:
             line = line.replace('OIC_TABLE_DATA', oicstr)
             line = line.replace('SIC_TABLE_DATA', sicstr)
