@@ -30,100 +30,101 @@ test_sl = '2t'
 model_defaults = defaultdict(dict)
 model_defaults = dict({'ai':{'link':'-'}, 'hy':{'link':'-'}, 'pm':{'link':'-'}})
 
-def allContrib(base, stream):
-    contrib_pl = getContrib(base, stream, test_pl)
-    contrib_sl = getContrib(base, stream, test_sl)    
-    contrib = joinContrib(contrib_pl, contrib_sl)    
-    outstr = ''
-    for centre in sorted(contrib.keys()):
-        try:
-            name = namemap[centre]['name']
-        except KeyError:
-            name = centre
-        c = contrib[centre]
-        print(centre)
-        outstr += '<tr><td>'+centre+'</td><td>'+name+addtd(c['pl'])+addtd(c['sl'])+'\n'
-    return(outstr)
+class Contrib(dict):
 
-def getContrib(base, stream, testfld):
-    if not os.path.exists(base):
-        sys.stderr.write('Cannot find '+base+'.  Run this application from the hpfx server.\n')
-        sys.exit(1)
-    if stream is None:
-        dirs = glob.glob(os.path.join(base, '*', testfld), recursive=True)
-        contrib = {}
-        for dir in dirs:
-            path = re.split('/', dir)
-            centre = path[-2]
-            path = os.path.join(exp, os.path.basename(base), centre)
-            if centre not in contrib.keys():
-                contrib[centre] = defaultdict(dict)
-            contrib[centre] = {'pm':{'link':'<a href="'+path+'">Available</a>', 'path':[path]}}
-        for centre in contrib.keys():
-            contrib[centre] = dict(contrib[centre])
-    else:
-        dirs = glob.glob(os.path.join(base, stream, '*/*', testfld), recursive=True)
-        contrib = {}
-        for dir in dirs:
-            path = re.split('/', dir)
-            (ty, ver) = re.split('_', path[-2])
-            centre = path[-3]
-            path = os.path.join(exp, os.path.basename(base), stream, centre, ty+'_'+ver)
-            if centre not in contrib.keys():
-                contrib[centre] = defaultdict(dict)
+    def __init__(self, base, stream):
+        contrib_pl = self._getContrib(base, stream, test_pl)
+        contrib_sl = self._getContrib(base, stream, test_sl)    
+        contrib = self._joinContrib(contrib_pl, contrib_sl)    
+        outstr = ''
+        for centre in sorted(contrib.keys()):
             try:
-                contrib[centre][ty]['link'] += ', <a href="'+path+'">v'+ver+'</a>'
-                contrib[centre][ty]['path'].append(path)
+                name = namemap[centre]['name']
             except KeyError:
-                contrib[centre][ty] = defaultdict(dict)
-                contrib[centre][ty] = {'link':'<a href="'+path+'">v'+ver+'</a>', 'path':[path]}
-        for centre in contrib.keys():
-            for ty in model_defaults.keys():
-                if ty not in contrib[centre]:
-                    contrib[centre][ty] = {'link':'-', 'path':[]}
-            contrib[centre] = dict(contrib[centre])
-    return(dict(contrib))
+                name = centre
+            c = contrib[centre]
+            outstr += '<tr><td>'+centre+'</td><td>'+name+self._addtd(c['pl'])+self._addtd(c['sl'])+'\n'
+        self.outstr = outstr
 
-def joinContrib(cpl, csl):
-    contrib = {}
-    for centre in set(list(cpl.keys()) + list(csl.keys())):
-        try:
-            pl = cpl[centre]
-        except KeyError:
-            pl = model_defaults
-        try:
-            sl = csl[centre]
-        except KeyError:
-            sl = model_defaults
-        contrib[centre] = {'pl':pl, 'sl':sl}
-    return(contrib)
+    def _getContrib(self, base, stream, testfld):
+        if not os.path.exists(base):
+            sys.stderr.write('Cannot find '+base+'.  Run this application from the hpfx server.\n')
+            sys.exit(1)
+        if stream is None:
+            dirs = glob.glob(os.path.join(base, '*', testfld), recursive=True)
+            contrib = {}
+            for dir in dirs:
+                path = re.split('/', dir)
+                centre = path[-2]
+                path = os.path.join(exp, os.path.basename(base), centre)
+                if centre not in contrib.keys():
+                    contrib[centre] = defaultdict(dict)
+                contrib[centre] = {'pm':{'link':'<a href="'+path+'">Available</a>', 'path':[path]}}
+            for centre in contrib.keys():
+                contrib[centre] = dict(contrib[centre])
+        else:
+            dirs = glob.glob(os.path.join(base, stream, '*/*', testfld), recursive=True)
+            contrib = {}
+            for dir in dirs:
+                path = re.split('/', dir)
+                (ty, ver) = re.split('_', path[-2])
+                centre = path[-3]
+                path = os.path.join(exp, os.path.basename(base), stream, centre, ty+'_'+ver)
+                if centre not in contrib.keys():
+                    contrib[centre] = defaultdict(dict)
+                try:
+                    contrib[centre][ty]['link'] += ', <a href="'+path+'">v'+ver+'</a>'
+                    contrib[centre][ty]['path'].append(path)
+                except KeyError:
+                    contrib[centre][ty] = defaultdict(dict)
+                    contrib[centre][ty] = {'link':'<a href="'+path+'">v'+ver+'</a>', 'path':[path]}
+            for centre in contrib.keys():
+                for ty in model_defaults.keys():
+                    if ty not in contrib[centre]:
+                        contrib[centre][ty] = {'link':'-', 'path':[]}
+                contrib[centre] = dict(contrib[centre])
+        return(dict(contrib))
 
-def addtd(d):
-    tdstr = ''
-    for ty in sorted(model_defaults):
-        try:
-            tdstr += '<td>'+d[ty]['link']+'</td>'
-        except KeyError:
-            pass
-    return(tdstr)
+    def _joinContrib(self, cpl, csl):
+        contrib = {}
+        for centre in set(list(cpl.keys()) + list(csl.keys())):
+            try:
+                pl = cpl[centre]
+            except KeyError:
+                pl = model_defaults
+            try:
+                sl = csl[centre]
+            except KeyError:
+                sl = model_defaults
+            contrib[centre] = {'pl':pl, 'sl':sl}
+        return(contrib)
+
+    def _addtd(self, d):
+        tdstr = ''
+        for ty in sorted(model_defaults):
+            try:
+                tdstr += '<td>'+d[ty]['link']+'</td>'
+            except KeyError:
+                pass
+        return(tdstr)
 
 
 # OIC Contributions
-oicstr = allContrib(fbase, 'oic')
+oic = Contrib(fbase, 'oic')
 
 # SIC Contributions
-sicstr = allContrib(fbase, 'sic')
+sic = Contrib(fbase, 'sic')
 
 # Available analyses
-anlstr = allContrib(os.path.join(base, 'analyses'), None)
+anl = Contrib(os.path.join(base, 'analyses'), None)
 
 # Create new index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tmpl'), "rt") as fdin:
     with open(os.path.join(html_path, ofile), "wt") as fdout:
         for line in fdin:
-            line = line.replace('OIC_TABLE_DATA', oicstr)
-            line = line.replace('SIC_TABLE_DATA', sicstr)
-            line = line.replace('ANALYSES_TABLE_DATA', anlstr)
+            line = line.replace('OIC_TABLE_DATA', oic.outstr)
+            line = line.replace('SIC_TABLE_DATA', sic.outstr)
+            line = line.replace('ANALYSES_TABLE_DATA', anl.outstr)
             line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
             line = line.replace('EDIT_WARNING','<!-- THIS FILE IS AUTOMATICALLY GENERATED BY THE genindex TOOL.  DO NOT EDIT THIS FILE!!! -->')
             fdout.write(line)
