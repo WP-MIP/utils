@@ -169,14 +169,19 @@ def pathIndex(paths):
     for p in paths:
         pitems = re.split('/', p)
         centre = pitems[-2]
-        dlist = os.path.listdir(p)
+        fullpath = os.path.join(html_path, p)
+        dlist = [dir for dir in os.scandir(fullpath) if os.path.isdir(dir)]
+        tline = ''
         for lev in levmap.keys():
-            vars = [dir for dir in dlist if dir in varmap.keys()]
-            print(vars)
-            with open(os.path.join(html_path, p, 'index_'+lev+'.html'), "w") as fdout:
+            vars = [dir for dir in dlist if dir.name in varmap[lev].keys()]
+            for var in vars:
+                tline += '<tr><td><a href='+var.name+'>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
+                    '<td>'+varmap[lev][var.name]['units']+'</td></tr>\n'
+            with open(os.path.join(fullpath, 'index_'+lev+'.html'), "w") as fdout:
                 for line in inlines:
                     tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], 'Forecasts</h1></center>'])
                     line = line.replace('TITLE', tmpstr)
+                    line = line.replace('TABLE_DATA', tline)
                     line = line.replace('EDIT_WARNING', edit_warning)
                     fdout.write(line)
                   
