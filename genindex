@@ -6,19 +6,52 @@ from collections import defaultdict
 # Contributor name mapping
 namemap = defaultdict(dict)
 namemap = dict({'cwao':{'name':'ECCC', 'long':'ECCC'},
-           'ecmf':{'name':'ECMWF', 'long':'ECMWF'},
-           'kwbc':{'name':'NOAA', 'long':'NOAA'},
-           'rksl':{'name':'KMA/KIAPS', 'long':'KMA_KIAPS'},
-           'ammc':{'name':'BoM', 'long':'BoM'},
-           'babj':{'name':'CMA', 'long':'CMA'},
-           'sbsj':{'name':'CPTEC', 'long':'CPTEC_INPE'},
-           'edzw':{'name':'DWD', 'long':'DWD'},
-           'vabb':{'name':'IMD', 'long':'IMD'},
-           'rjtd':{'name':'JMA', 'long':'JMA'},
-           'egrr':{'name':'UKMO', 'long':'UKMO'},
-           'enmi':{'name':'MetNo', 'long':'MetNo'},
-           'rums':{'name':'RAS', 'long':'RAS'}})
+                'ecmf':{'name':'ECMWF', 'long':'ECMWF'},
+                'kwbc':{'name':'NOAA', 'long':'NOAA'},
+                'rksl':{'name':'KMA/KIAPS', 'long':'KMA_KIAPS'},
+                'ammc':{'name':'BoM', 'long':'BoM'},
+                'babj':{'name':'CMA', 'long':'CMA'},
+                'sbsj':{'name':'CPTEC', 'long':'CPTEC_INPE'},
+                'edzw':{'name':'DWD', 'long':'DWD'},
+                'vabb':{'name':'IMD', 'long':'IMD'},
+                'rjtd':{'name':'JMA', 'long':'JMA'},
+                'egrr':{'name':'UKMO', 'long':'UKMO'},
+                'enmi':{'name':'MetNo', 'long':'MetNo'},
+                'rums':{'name':'RAS', 'long':'RAS'}})
 
+# Variable name mapping
+varmap = {'pl':defaultdict(dict), 'sl':defaultdict(dict)}
+varmap['pl'] = dict({'t':{'long':'Temperature', 'units':'K'},
+                     'q':{'long':'Specific Humidity', 'units':'kg kg<sup>-1</sup>'},
+                     'u':{'long':'U-Component Wind', 'units':'m s<sup>-1</sup>'},
+                     'v':{'long':'V-Component Wind', 'units':'m s<sup>-1</sup>'},
+                     'gp':{'long':'Geopential Height', 'units':'m'}})
+varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa'},
+                     'sp':{'long':'Surface Pressure', 'units':'Pa'},
+                     '2t':{'long':'Screen-Level Temperature', 'units':'K'},
+                     '2sh':{'long':'Screen-Level Specific Humidity', 'units':'kg kg<sup>-1</sup>'},
+                     '2d':{'long':'Screen-Level Dewpoint', 'units':'K'},
+                     'sst':{'long':'Sea Surface Temperature', 'units':'K'},
+                     '10u':{'long':'Anemometer-Level U-Component Wind', 'units':'m s<sup>-1</sup>'},
+                     '10v':{'long':'Anemometer-Level V-Component Wind', 'units':'m s<sup>-1</sup>'},
+                     'tp':{'long':'Precipitation Accumulation', 'units':'kg m<sup>-2</sup>'},
+                     'ci':{'long':'Sea Ice Fraction', 'units':''},
+                     'sithink':{'long':'Sea Ice Thickness', 'units':'m'},
+                     'tcc':{'long':'Total Cloud Cover', 'units':'%'},
+                     'lcc':{'long':'Low Cloud Cover', 'units':'%'},
+                     'mcc':{'long':'Mid Cloud Cover', 'units':'%'},
+                     'hcc':{'long':'High Cloud Cover', 'units':'%'},
+                     'ssr':{'long':'Surface Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'ssrd':{'long':'Surface Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'str':{'long':'Surface Net Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'strd':{'long':'Surface Downwelling Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'str':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'tisr':{'long':'TOA Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'ttr':{'long':'TOA Net Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
+                     'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>'},
+                     'shlf':{'long':'Time-Integrated Surface Latent Heat Fklux', 'units':'J m<sup>-2</sup>'}})
+
+                    
 # Basic setup
 ofile='index_test.html'
 exp = 'WP-MIP'
@@ -126,6 +159,16 @@ class Contrib(dict):
                 pass
         return(paths)
 
+def pathIndex(paths):
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_model.tmpl'), "rt") as fdin:
+        for p in paths:
+            pitems = re.split('/', p)
+            centre = pitems[-2]
+            for lev in varmap.keys():
+                with open(os.path.join(html_path, p, 'index_'+lev+'.html'), "wt") as fdout:
+                    for line in fdin:
+                        pass
+                  
 
 # OIC Contributions
 oic = Contrib(fbase, 'oic')
@@ -146,3 +189,7 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tm
             line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
             line = line.replace('EDIT_WARNING','<!-- THIS FILE IS AUTOMATICALLY GENERATED BY THE genindex TOOL.  DO NOT EDIT THIS FILE!!! -->')
             fdout.write(line)
+
+# Create model-specific index files
+pathIndex(oic.paths)
+
