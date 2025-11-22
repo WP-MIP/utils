@@ -55,10 +55,10 @@ def getContrib(base, stream, testfld):
         for dir in dirs:
             path = re.split('/', dir)
             centre = path[-2]
-            link = os.path.join(exp, os.path.basename(base), centre)
+            path = os.path.join(exp, os.path.basename(base), centre)
             if centre not in contrib.keys():
                 contrib[centre] = defaultdict(dict)
-            contrib[centre] = {'pm':{'link':'<a href="'+link+'">Available</a>'}}
+            contrib[centre] = {'pm':{'link':'<a href="'+path+'">Available</a>', 'path':path}}
         for centre in contrib.keys():
             contrib[centre] = dict(contrib[centre])
     else:
@@ -68,17 +68,20 @@ def getContrib(base, stream, testfld):
             path = re.split('/', dir)
             (ty, ver) = re.split('_', path[-2])
             centre = path[-3]
-            link = os.path.join(exp, os.path.basename(base), stream, centre, ty+'_'+ver)
+            path = os.path.join(exp, os.path.basename(base), stream, centre, ty+'_'+ver)
             if centre not in contrib.keys():
                 contrib[centre] = defaultdict(dict)
             try:
-                contrib[centre][ty]['link'] += ', <a href="'+link+'">v'+ver+'</a>'
+                contrib[centre][ty]['link'] += ', <a href="'+path+'">v'+ver+'</a>'
+                contrib[centre][ty]['path'] = path
             except KeyError:
                 contrib[centre][ty] = defaultdict(dict)
-                contrib[centre][ty]['link'] = '<a href="'+link+'">v'+ver+'</a>'
+                contrib[centre][ty]['link'] = '<a href="'+path+'">v'+ver+'</a>'
+                contrib[centre][ty]['path'] = path
         for centre in contrib.keys():
             for ty in model_defaults.keys():
-                if ty not in contrib[centre]: contrib[centre][ty]['link'] = '-'
+                if ty not in contrib[centre]:
+                    contrib[centre][ty] = {'link':'-', 'path':None}
             contrib[centre] = dict(contrib[centre])
     return(dict(contrib))
 
