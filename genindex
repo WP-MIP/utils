@@ -47,9 +47,13 @@ class Contrib(dict):
                 name = centre
             c = contrib[centre]
             outstr += '<tr><td>'+centre+'</td><td>'+name+self._addtd(c['pl'])+self._addtd(c['sl'])+'\n'
-            self._addpath(c['pl'])
-            self._addpath(c['sl'])
+            paths.extend(self._addpath(c['pl']))
+            paths.extend(self._addpath(c['sl']))
         self.outstr = outstr
+        self.paths = []
+        for p in paths:
+            if p:
+                self.paths.extend(p)
 
     def _getContrib(self, base, stream, testfld):
         if not os.path.exists(base):
@@ -114,11 +118,13 @@ class Contrib(dict):
         return(tdstr)
 
     def _addpath(self, p):
+        paths = []
         for ty in model_defaults:
             try:
-                print(p[ty])
+                paths.append(p[ty]['path'])
             except KeyError:
                 pass
+        return(paths)
 
 
 # OIC Contributions
