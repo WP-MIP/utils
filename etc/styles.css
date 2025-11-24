@@ -1,3 +1,8 @@
+
+	* {
+	    font-family: Veranda,Arial,helvetica,sans-serif;
+	}
+	
         table { width: 100%; border-collapse: collapse; /* Essential
             for border-bottom on tr or td */ }
 
@@ -9,3 +14,4 @@
 
         tr:hover td { border-bottom: 2px solid blue; /* Thicker, blue
             bottom border on hover */ }
+
