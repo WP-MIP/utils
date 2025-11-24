@@ -1,5 +1,5 @@
 #!/gpfs/fs3c/eccc/mrd/rpnatm/swpm001/installed/venv/bin/python
-import glob, os, re, sys
+import glob, os, re, sys, calendar
 from datetime import datetime
 from collections import defaultdict
 
@@ -21,35 +21,37 @@ namemap = dict({'cwao':{'name':'ECCC', 'long':'ECCC'},
 
 # Variable name mapping
 varmap = {'pl':defaultdict(dict), 'sl':defaultdict(dict)}
-varmap['pl'] = dict({'t':{'long':'Temperature', 'units':'K'},
-                     'q':{'long':'Specific Humidity', 'units':'kg kg<sup>-1</sup>'},
-                     'u':{'long':'U-Component Wind', 'units':'m s<sup>-1</sup>'},
-                     'v':{'long':'V-Component Wind', 'units':'m s<sup>-1</sup>'},
-                     'gp':{'long':'Geopential Height', 'units':'m'}})
-varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa'},
-                     'sp':{'long':'Surface Pressure', 'units':'Pa'},
-                     '2t':{'long':'Screen-Level Temperature', 'units':'K'},
-                     '2sh':{'long':'Screen-Level Specific Humidity', 'units':'kg kg<sup>-1</sup>'},
-                     '2d':{'long':'Screen-Level Dewpoint', 'units':'K'},
-                     'sst':{'long':'Sea Surface Temperature', 'units':'K'},
-                     '10u':{'long':'Anemometer-Level U-Component Wind', 'units':'m s<sup>-1</sup>'},
-                     '10v':{'long':'Anemometer-Level V-Component Wind', 'units':'m s<sup>-1</sup>'},
-                     'tp':{'long':'Precipitation Accumulation', 'units':'kg m<sup>-2</sup>'},
-                     'ci':{'long':'Sea Ice Fraction', 'units':''},
-                     'sithink':{'long':'Sea Ice Thickness', 'units':'m'},
-                     'tcc':{'long':'Total Cloud Cover', 'units':'%'},
-                     'lcc':{'long':'Low Cloud Cover', 'units':'%'},
-                     'mcc':{'long':'Mid Cloud Cover', 'units':'%'},
-                     'hcc':{'long':'High Cloud Cover', 'units':'%'},
-                     'ssr':{'long':'Surface Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'ssrd':{'long':'Surface Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'str':{'long':'Surface Net Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'strd':{'long':'Surface Downwelling Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'str':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'tisr':{'long':'TOA Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'ttr':{'long':'TOA Net Longwave Accumulation', 'units':'J m<sup>-2</sup>'},
-                     'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>'},
-                     'shlf':{'long':'Time-Integrated Surface Latent Heat Fklux', 'units':'J m<sup>-2</sup>'}})
+varmap['pl'] = dict({'t':{'long':'Temperature', 'units':'K', 'id':'130'},
+                     'q':{'long':'Specific Humidity', 'units':'kg kg<sup>-1</sup>', 'id':'133'},
+                     'u':{'long':'U-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'131'},
+                     'v':{'long':'V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'132'},
+                     'gp':{'long':'Geopential Height', 'units':'m', 'id':'156'}})
+varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa', 'id':'151'},
+                     'sp':{'long':'Surface Pressure', 'units':'Pa', 'id':'134'},
+                     '2t':{'long':'Screen-Level Temperature', 'units':'K', 'id':'167'},
+                     '2sh':{'long':'Screen-Level Specific Humidity', 'units':'kg kg<sup>-1</sup>', 'id':'174096'},
+                     '2d':{'long':'Screen-Level Dewpoint', 'units':'K', 'id':'168'},
+                     'sst':{'long':'Sea Surface Temperature', 'units':'K', 'id':''},
+                     '10u':{'long':'Anemometer-Level U-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'165'},
+                     '10v':{'long':'Anemometer-Level V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'166'},
+                     'tp':{'long':'Precipitation Accumulation', 'units':'kg m<sup>-2</sup>', 'id':'228228'},
+                     'ci':{'long':'Sea Ice Fraction', 'units':'', 'id':'31'},
+                     'sithink':{'long':'Sea Ice Thickness', 'units':'m', 'id':'174098'},
+                     'tcc':{'long':'Total Cloud Cover', 'units':'%', 'id':'228164'},
+                     'lcc':{'long':'Low Cloud Cover', 'units':'%', 'id':'3073'},
+                     'mcc':{'long':'Mid Cloud Cover', 'units':'%', 'id':'3074'},
+                     'hcc':{'long':'High Cloud Cover', 'units':'%', 'id':'3075'},
+                     'ssr':{'long':'Surface Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'176'},
+                     'ssrd':{'long':'Surface Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'169'},
+                     'str':{'long':'Surface Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'175'},
+                     'strd':{'long':'Surface Downwelling Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'177'},
+                     'str':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'178'},
+                     'tisr':{'long':'TOA Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'179'},
+                     'ttr':{'long':'TOA Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'212'},
+                     'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'146'},
+                     'shlf':{'long':'Time-Integrated Surface Latent Heat Fklux', 'units':'J m<sup>-2</sup>', 'id':'147'},
+                     'lsm':{'long':'Land-Sea Mask', 'units':'', 'id':'172'},
+                     'orog':{'long':'Orography', 'units':'m', 'id':'228002'}})
 
 # Level name mapping
 levmap = {'sl':'Single-Level', 'pl':'Pressure-Level'}
@@ -163,12 +165,14 @@ class Contrib(dict):
                 paths.append(p[ty]['path'])
             except KeyError:
                 pass
-        return(paths)
-
+        return(paths)    
+    
 def pathIndex(paths):
-    fdin = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_model.tmpl'), "rt")
-    inlines = fdin.readlines()
-    fdin.close()
+    inlines = {}
+    for pagelev in ['model', 'var']:
+        fdin = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_'+pagelev+'.tmpl'), "rt")
+        inlines[pagelev] = fdin.readlines()
+        fdin.close()
     for p in paths:
         pitems = re.split('/', p)
         centre = pitems[-2]
@@ -179,15 +183,77 @@ def pathIndex(paths):
         for lev in levmap.keys():
             tline = ''
             vars = [dir for dir in sorted(dlist, key=lambda dir: dir.name) if dir.name in varmap[lev].keys()]
-            print(vars)
             for var in vars:
-                print(var)
+                
+                # Variable-level page showing available files
+                varpath = os.path.join(fullpath, var.name)
+                if lev == 'sl':
+                    files = [fn for fn in sorted(os.scandir(varpath), key=lambda file: file.name) if re.search('grib2', fn.name)]
+                else:
+                    flist = []
+                    for file in [fn for fn in os.scandir(varpath) if re.search('grib2', fn.name)]:
+                        fsplit = re.split('_', file.name)
+                        icode = int(fsplit[1])*100 + int(re.split('\.', fsplit[-1])[0])
+                        flist.append({'file':file, 'code':icode})
+                    files = [fn['file'] for fn in sorted(flist, key=lambda file: file['code'])]
+                fline = ''
+                for fn in files:
+                    fsplit = re.split('_', fn.name)
+                    mon = int(re.split('\.', fsplit[-1])[0])
+                    year = 2024
+                    while mon > 12:
+                        year += 1
+                        mon -= 12
+                    if lev == 'pl':
+                        slev = fsplit[1]
+                        fline += '<tr><td><a href='+fn.name+'>'+fn.name+'</a></td><td>'+slev+'</td><td>'+calendar.month_name[mon]+' '+str(year)+'</td>'
+                    else:
+                        fline += '<tr><td><a href='+fn.name+'>'+fn.name+'</a></td><td>'+calendar.month_name[mon]+' '+str(year)+'</td>'
+                with open(os.path.join(varpath, 'index_var.html'), "w") as fdvar:
+                    titlestr = ' '.join(['<center><h1>', namemap[centre]['long'], typemap[ty], 'Model', \
+                                       varmap[lev][var.name]['long'], 'Forecasts', '('+stream.upper()+')', '</h1></center>'])
+                    fsplit = re.split('_', fn.name)
+                    leveg = ''
+                    levwild = ''
+                    levinst = ''
+                    levcol = ''
+                    if lev == 'pl':
+                        fsplit[1] = 'LEV'
+                        leveg = 'lev=500'
+                        levwild = '*_${lev}_'
+                        levinst = 'levels (LEV) and'
+                        levcol = '<th>Level (hPa)</th>'
+                    fsplit[-1] = 'MM.grib2'
+                    filestr = '_'.join(fsplit)
+                    linkstr = re.sub(base+'/', '', varpath)
+                    for line in inlines['var']:
+                        line = line.replace('TITLE', titlestr)
+                        line = line.replace('EDIT_WARNING', edit_warning)
+                        line = line.replace('VARLONG', varmap[lev][var.name]['long'].lower())
+                        line = line.replace('VARCAP', varmap[lev][var.name]['long'])
+                        line = line.replace('CENTRELONG', namemap[centre]['long'])
+                        line = line.replace('CENTRENAME', namemap[centre]['name'])
+                        line = line.replace('FILESTR', filestr)
+                        line = line.replace('MODEL_TYPE', typemap[ty])
+                        line = line.replace('GRIBID', varmap[lev][var.name]['id'])
+                        line = line.replace('LEV_COL', levcol)
+                        line = line.replace('LEV_INST', levinst)
+                        line = line.replace('LEV_EXAMPLE', leveg)
+                        line = line.replace('LEV_WILD', levwild)
+                        line = line.replace('VARPATH', linkstr)
+                        line = line.replace('TABLE_DATA', fline)
+                        line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
+                        fdvar.write(line)
+                        
+                # Table line for model-level page
                 tline += '<tr><td><a href='+var.name+'>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
                     '<td>'+varmap[lev][var.name]['units']+'</td></tr>\n'
-            with open(os.path.join(fullpath, 'index_'+lev+'.html'), "w") as fdout:
-                for line in inlines:
-                    tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], typemap[ty],
-                                       'Model Forecasts','('+stream.upper()+')','</h1></center>'])
+
+            # Model-level page showing available variables
+            with open(os.path.join(fullpath, 'index_'+lev+'.html'), "w") as fdmod:
+                tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], typemap[ty],
+                                   'Model Forecasts','('+stream.upper()+')','</h1></center>'])
+                for line in inlines['model']:
                     line = line.replace('TITLE', tmpstr)
                     line = line.replace('TABLE_DATA', tline)
                     line = line.replace('EDIT_WARNING', edit_warning)
@@ -195,7 +261,7 @@ def pathIndex(paths):
                     line = line.replace('CENTRELONG', namemap[centre]['long'])
                     line = line.replace('CENTRENAME', namemap[centre]['name'])
                     line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
-                    fdout.write(line)
+                    fdmod.write(line)
                   
 
 # OIC Contributions
