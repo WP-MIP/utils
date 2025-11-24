@@ -11,7 +11,7 @@ namemap = dict({'cwao':{'name':'ECCC', 'long':'ECCC'},
                 'rksl':{'name':'KMA/KIAPS', 'long':'KMA_KIAPS'},
                 'ammc':{'name':'BoM', 'long':'BoM'},
                 'babj':{'name':'CMA', 'long':'CMA'},
-                'sbsj':{'name':'CPTEC', 'long':'CPTEC_INPE'},
+                'sbsj':{'name':'CPTEC/INPE', 'long':'CPTEC_INPE'},
                 'edzw':{'name':'DWD', 'long':'DWD'},
                 'vabb':{'name':'IMD', 'long':'IMD'},
                 'rjtd':{'name':'JMA', 'long':'JMA'},
@@ -52,7 +52,10 @@ varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa'},
                      'shlf':{'long':'Time-Integrated Surface Latent Heat Fklux', 'units':'J m<sup>-2</sup>'}})
 
 # Level name mapping
-levmap = {'sl':'Single-Level', 'pl':'Pressure-Level'} 
+levmap = {'sl':'Single-Level', 'pl':'Pressure-Level'}
+
+# Model type name mapping
+typemap = {'ai':'AI', 'hy':'hybrid', 'pm':'physical'}
                     
 # Basic setup
 ofile='index_test.html'
@@ -178,11 +181,16 @@ def pathIndex(paths):
                 tline += '<tr><td><a href='+var.name+'>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
                     '<td>'+varmap[lev][var.name]['units']+'</td></tr>\n'
             with open(os.path.join(fullpath, 'index_'+lev+'.html'), "w") as fdout:
+                ty = re.split('_', os.path.basename(fullpath))[0]
                 for line in inlines:
                     tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], 'Forecasts</h1></center>'])
                     line = line.replace('TITLE', tmpstr)
                     line = line.replace('TABLE_DATA', tline)
                     line = line.replace('EDIT_WARNING', edit_warning)
+                    line = line.replace('MODEL_TYPE', typemap[ty])
+                    line = line.replace('CENTRELONG', namemap[centre]['long'])
+                    line = line.replace('CENTRENAME', namemap[centre]['name'])
+                    line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
                     fdout.write(line)
                   
 
