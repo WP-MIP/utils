@@ -172,18 +172,22 @@ def pathIndex(paths):
     for p in paths:
         pitems = re.split('/', p)
         centre = pitems[-2]
+        stream = pitems[-3]
+        ty = re.split('_', pitems[-1])[0]
         fullpath = os.path.join(html_path, p)
         dlist = [dir for dir in os.scandir(fullpath) if os.path.isdir(dir)]
-        tline = ''
         for lev in levmap.keys():
-            vars = [dir for dir in dlist if dir.name in varmap[lev].keys()]
+            tline = ''
+            vars = [dir for dir in sorted(dlist, key=lambda dir: dir.name) if dir.name in varmap[lev].keys()]
+            print(vars)
             for var in vars:
+                print(var)
                 tline += '<tr><td><a href='+var.name+'>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
                     '<td>'+varmap[lev][var.name]['units']+'</td></tr>\n'
             with open(os.path.join(fullpath, 'index_'+lev+'.html'), "w") as fdout:
-                ty = re.split('_', os.path.basename(fullpath))[0]
                 for line in inlines:
-                    tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], 'Forecasts</h1></center>'])
+                    tmpstr = ' '.join(['<center><h1>', namemap[centre]['long'], levmap[lev], typemap[ty],
+                                       'Model Forecasts','('+stream.upper()+')','</h1></center>'])
                     line = line.replace('TITLE', tmpstr)
                     line = line.replace('TABLE_DATA', tline)
                     line = line.replace('EDIT_WARNING', edit_warning)
