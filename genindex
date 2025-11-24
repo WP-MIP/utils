@@ -246,7 +246,7 @@ def pathIndex(paths):
                         fdvar.write(line)
                         
                 # Table line for model-level page
-                tline += '<tr><td><a href='+var.name+'>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
+                tline += '<tr><td><a href='+var.name+'/index_var.html>'+varmap[lev][var.name]['long']+'</a></td><td>'+var.name+'</td>'+ \
                     '<td>'+varmap[lev][var.name]['units']+'</td></tr>\n'
 
             # Model-level page showing available variables
