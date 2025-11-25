@@ -20,11 +20,11 @@
       FILESTR
     </pre>
     <p>They can be retrieved from the Linux command line using a command based on the example below, where LEV_INST 2-digit months (MM) can be
-      specified as needed (e.g. as variables or literals) or provided as wildcards to download multiple files:</p>
+      specified as needed (as variables, literals, etc) or provided as wildcards to download multiple files:</p>
 
     <pre>
       LEV_EXAMPLE
-      mm=03
+      mm=03      #e.g. retrieve month 3 (March)
       wget -e robots=off -nd -r --no-parent -A "LEV_WILD*_${mm}.grib2" https://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/VARPATH/
     </pre>
       

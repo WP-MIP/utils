@@ -233,7 +233,7 @@ def pathIndex(paths):
                     levcol = ''
                     if lev == 'pl':
                         fsplit[1] = 'LEV'
-                        leveg = 'lev=500'
+                        leveg = 'lev=500      #e.g. retrieve 500 hPa level'
                         levwild = '*_${lev}_'
                         levinst = 'levels (LEV) and'
                         levcol = '<th>Level (hPa)</th>'
