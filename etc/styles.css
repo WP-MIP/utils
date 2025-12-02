@@ -3,15 +3,15 @@
 	    font-family: Veranda,Arial,helvetica,sans-serif;
 	}
 	
-        table { width: 100%; border-collapse: collapse; /* Essential
+        .table-style-one table { width: 100%; border-collapse: collapse; /* Essential
             for border-bottom on tr or td */ }
 
-        th, td { padding: 8px; text-align: left; border-bottom: 1px
+        .table-style-one th, td { padding: 8px; text-align: left; border-bottom: 1px
             solid #ddd; /* Default bottom border for cells */ }
 
-        tr:hover { background-color: #f5f5f5; /* Optional: highlight
+        .table-style-one tr:hover { background-color: #f5f5f5; /* Optional: highlight
             row on hover */ }
 
-        tr:hover td { border-bottom: 2px solid blue; /* Thicker, blue
+        .table-style-one tr:hover td { border-bottom: 2px solid blue; /* Thicker, blue
             bottom border on hover */ }
 

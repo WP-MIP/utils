@@ -60,7 +60,6 @@ levmap = {'sl':'Single-Level', 'pl':'Pressure-Level'}
 typemap = {'ai':'AI', 'hy':'Hybrid', 'pm':'Physical'}
                     
 # Basic setup
-ofile='index.html'
 exp = 'WP-MIP'
 base = os.path.join('/home/swpm001/public_html', exp)
 fbase = os.path.join(base, 'forecasts')
@@ -155,7 +154,7 @@ class Contrib(dict):
         tdstr = ''
         for ty in sorted(model_defaults):
             try:
-                tdstr += '<td>'+d[ty]['link']+'</td>'
+                tdstr += '<td style="text-align: center;">'+d[ty]['link']+'</td>'
             except KeyError:
                 pass
         return(tdstr)
@@ -283,8 +282,23 @@ def pathIndex(paths):
                     line = line.replace('PRODLOWER', prod.lower())
                     line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
                     fdmod.write(line)
-                  
 
+
+### Generic Tools ###
+
+# Generate data portal landing pad
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tmpl'), "rt") as fdin:
+    with open(os.path.join(html_path, "index.html"), "wt") as fdout:
+        for line in fdin:
+            line = line.replace('EDIT_WARNING', edit_warning)
+            fdout.write(line)
+
+# Copy CSS file to destination
+shutil.copy(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/styles.css'), os.path.dirname(base))
+
+                    
+### Contribution-based Tools ###
+                    
 # OIC Contributions
 oic = Contrib(fbase, 'oic')
 
@@ -294,9 +308,9 @@ sic = Contrib(fbase, 'sic')
 # Available analyses
 anl = Contrib(os.path.join(base, 'analyses'), None)
 
-# Create new index file
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index.tmpl'), "rt") as fdin:
-    with open(os.path.join(html_path, ofile), "wt") as fdout:
+# Create new contributor index file
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_contrib.tmpl'), "rt") as fdin:
+    with open(os.path.join(html_path, "index_contrib.html"), "wt") as fdout:
         for line in fdin:
             line = line.replace('OIC_TABLE_DATA', oic.outstr)
             line = line.replace('SIC_TABLE_DATA', sic.outstr)
@@ -310,5 +324,8 @@ pathIndex(oic.paths)
 pathIndex(sic.paths)
 pathIndex(anl.paths)
 
-# Copy CSS file to destination
-shutil.copy(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/styles.css'), os.path.dirname(base))
+
+### Variable-based Tools ###
+
+
+

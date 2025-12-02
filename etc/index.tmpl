@@ -18,11 +18,20 @@
       they do not genreate their own.  The Same Initial Conditions (SIC) stream consists of forecasts initialized from operational European Centre for Medium-Range
       Weather Forecasts (ECMWF) analyses.</p>
 
+    <center><h3>Forecast Data Entry Points</h3></center>
+    <table style="width:100%">
+      <tr>
+	<td style="text-align: center;"><a href="index_contrib.html">Access Data by Contributing Centre</a></td>
+	<td style="text-align: center;"><a href="index_var.html">Access Data by Forecast Field</a></td>
+      </tr>
+    </table>
+    <br>
+
     <h3>Retrieving WP-MIP Forecasts</h3>
-    <p>For a quick interactive look at available WP-MIP data, you can use the links within the tables below to investigate the archive.  Alternatively, you
+    <p>For an interactive look at what's available WP-MIP data, you can use the links above to investigate the archive.  Alternatively, you
       can <a href="WP-MIP">browse the archive</a> using your web browser.  These methods are also useful if you want to download a small number of files through your browser.</p>
 
-    <p>To download larger volumes of data, use the wget application.  Download instructions for specific variables are provided through the links in the table below.
+    <p>To download larger volumes of data, use the wget application.  Download instructions are provided through the access-point links above.
       These intructions are relatively general for users already familiar with the archive structure.  For example, to retrieve all 500 hPa geopotential height
       forecasts from the IFS integrations submitted by ECMWF:
       <pre>
@@ -30,62 +39,6 @@
       </pre>
       The wildcards in the file name and path should be modified to target the data to retrieve.  If any of this is unclear, use the links in the tables below
       to find the data that you need, then follow the specific download instructions provided.</p>
-
-    <h3>Current Archive Status</h3>
-    <p>The version numbers for each of the contributions is shown in the tables below to indicate data availability.  These archive tables were last updated at GEN_DATETIME.</p>
-    <br><hr><br>
-    
-    <h2>OIC Stream</h2>
-    <table style="width:100%">
-      <tr>
-	<th rowspan="2">Identifier</th>
-	<th rowspan="2">Contributor</th>
-	<th colspan="3" style="text-align: center;">Pressure-Level</th>
-	<th colspan="3" style="text-align: center;">Single-Level</th>
-      </tr>
-      <tr>
-	<th>AI (ai)</th>
-	<th>Hybrid (hy)</th>
-	<th>Physical (pm)</th>
-	<th>AI (ai)</th>
-	<th>Hybrid (hy)</th>
-	<th>Physical (pm)</th>
-      </tr>
-OIC_TABLE_DATA
-    </table>
-    <br>
-  
-    <h2>SIC Stream</h2>
-    <table style="width:100%">
-      <tr>
-	<th rowspan="2">Identifier</th>
-	<th rowspan="2">Contributor</th>
-	<th colspan="3" style="text-align: center;">Pressure-Level</th>
-	<th colspan="3" style="text-align: center;">Single-Level</th>
-      </tr>
-      <tr>
-	<th>AI (ai)</th>
-	<th>Hybrid (hy)</th>
-	<th>Physical (pm)</th>
-	<th>AI (ai)</th>
-	<th>Hybrid (hy)</th>
-	<th>Physical (pm)</th>
-      </tr>
-SIC_TABLE_DATA
-    </table>
-   <br>
-
-    <h2>Analyses</h2>
-    <table style="width:100%">
-      <tr>
-	<th>Identifier</th>
-	<th>Contributor</th>
-	<th>Pressure-Level</th>
-	<th>Single-Level</th>
-      </tr>
-ANALYSES_TABLE_DATA
-    </table>
-    <br>
     
   </body>
 </html> 
