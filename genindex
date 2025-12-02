@@ -327,5 +327,12 @@ pathIndex(anl.paths)
 
 ### Variable-based Tools ###
 
+# Create new variable index file
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar.tmpl'), "rt") as fdin:
+    with open(os.path.join(html_path, "index_byvar.html"), "wt") as fdout:
+        for line in fdin:
+            line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
+            line = line.replace('EDIT_WARNING', edit_warning)
+            fdout.write(line)
 
 
