@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WP-MIP Data Portal</title>
+    <link rel="stylesheet" href="https://hpfx.collab.science.gc.ca/~swpm001/styles.css">
+  </head>
+  <body>
+    EDIT_WARNING
+
+    TITLE
+    <br>
+    <p>This section of the <a href="https://hpfx.collab.science.gc.ca/~swpm001">WP-MIP forecast portal</a> contains PRODLOWER of VARLONG.  More information about the
+      contributing models listed here can be found in the <a href="https://github.com/WP-MIP/utils/wiki/CENTRELONG-Model-Descriptions">model description</a>.</p>
+
+    <p>A complete description of the GRIB2 encoding of VARLONG PRODLOWER can be found in <a href="https://codes.ecmwf.int/grib/param-db/GRIBID">parameter details</a>.</p> 
+    
+    <h3>Retrieving VARCAP PRODCAP</h3>
+    <p>The PRODLOWER in this directory have names that follow the WP-MIP conventions as:</p>
+    <pre>
+      FILESTR
+    </pre>
+    <p>They can be retrieved from the Linux command line using a command based on the example below, where LEV_INST 2-digit months (MM) can be
+      specified as needed (as variables, literals, etc) or provided as wildcards to download multiple files:</p>
+
+    <pre>
+      LEV_EXAMPLE
+      mm=03      #e.g. retrieve month 3 (March)
+      wget -e robots=off -nd -r --no-parent -A "LEV_WILD*_${mm}.grib2" https://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/VARPATH/
+    </pre>
+      
+    
+    <h3>Current Archive Status</h3>
+    <p>This archive table was last updated at GEN_DATETIME.</p>
+    <br><hr><br>
+
+    <h2>Available PRODCAP</h2>
+    <table style="width:100%">
+      <tr>
+	<th>File Name</th>
+	LEV_COL
+	<th>Contributor</th>
+	<th>Model Type</th>
+	<th>Version</th>
+	<th>Time Period</th>
+      </tr>
+      TABLE_DATA
+    </table>
+  </body>
+</html>
