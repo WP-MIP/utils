@@ -1,5 +1,5 @@
 #!/gpfs/fs3c/eccc/mrd/rpnatm/swpm001/installed/venv/bin/python
-import glob, os, re, sys, calendar, shutil
+import glob, os, re, sys, calendar, shutil, glob, errno
 from datetime import datetime
 from collections import defaultdict
 
@@ -25,7 +25,7 @@ varmap['pl'] = dict({'t':{'long':'Temperature', 'units':'K', 'id':'130'},
                      'q':{'long':'Specific Humidity', 'units':'kg kg<sup>-1</sup>', 'id':'133'},
                      'u':{'long':'U-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'131'},
                      'v':{'long':'V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'132'},
-                     'gp':{'long':'Geopential Height', 'units':'m', 'id':'156'}})
+                     'gh':{'long':'Geopential Height', 'units':'m', 'id':'156'}})
 varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa', 'id':'151'},
                      'sp':{'long':'Surface Pressure', 'units':'Pa', 'id':'134'},
                      '2t':{'long':'Screen-Level Temperature', 'units':'K', 'id':'167'},
@@ -58,6 +58,9 @@ levmap = {'sl':'Single-Level', 'pl':'Pressure-Level'}
 
 # Model type name mapping
 typemap = {'ai':'AI', 'hy':'Hybrid', 'pm':'Physical'}
+
+# Level value mapping
+levsmap = {'sl':[1], 'pl':[1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100, 50, 10]}
                     
 # Basic setup
 exp = 'WP-MIP'
@@ -167,6 +170,79 @@ class Contrib(dict):
             except KeyError:
                 pass
         return(paths)    
+
+class Var(dict):
+    
+    def __init__(self, base, lev, dir):
+        self.base = base
+        self.lev = lev
+        self.levs = levsmap[lev]
+        path = re.split('/', dir)
+        self.path = dir
+        self.fullpath = os.path.join(self.base, self.path)
+        self.name = path[-1]
+        self.prod = path[0]
+        print(path)
+        print(self.prod)
+        if self.prod == 'analyses':
+            self.centre = path[1]
+        else:
+            self.stream = path[1]
+            self.centre = path[2]
+            tyver = re.split('_', path[3])
+            self.ty = tyver[0]
+            self.ver = tyver[1]
+
+def varList(base, map, lev):
+    vlist = {}
+    for var in map[lev].keys():
+        dirs = []
+        for subdir in ['analyses', 'forecasts']:
+            dirs += glob.glob(os.path.join(subdir, '**', var), root_dir=base, recursive=True)
+        vlist[var] = [Var(base, lev, dir) for dir in dirs]
+    return(vlist)
+
+def varLinks(vlist):
+    indexdir = os.path.join(html_path, exp, 'vindex')
+    mkdirp(indexdir)
+    for (k, v) in vlist.items():
+        vardir = os.path.join(indexdir, k)
+        mkdirp(vardir)
+        for var in v:
+            if var.lev == 'pl':
+                for lev in var.levs:
+                    levdir = os.path.join(vardir, str(lev))
+                    mkdirp(levdir)
+                    flist = glob.glob(os.path.join(var.fullpath, var.name+'_'+str(lev)+'_'+'*.grib2'))
+                    [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
+        #for lev in 
+        #[os.symlink(var.fullpath, os.path.join(vdir)]
+        #print(k)
+        #print(len(v))
+
+def mkdirp(dir):
+    try:
+        os.mkdir(dir)
+    except FileExistsError:
+        pass
+
+def symlinkf(target, link):
+    try:
+        os.symlink(target, link)
+    except FileExistsError:
+        rlink = os.path.realpath(link)
+        rtarget = os.path.realpath(target)
+        if rlink != rtarget:
+            sys.stderr.write('Error: link/target mismatch.\n  Link:   '+rlink+'\n  Target: '+rtarget+'\n')
+            raise
+    
+def varIndex(vlist):
+    vdir = os.path.join(html_path, 'vindex')
+    try:
+        os.mkdir(vdir)
+    except FileExistsError:
+        pass
+    
     
 def pathIndex(paths):
     inlines = {}
@@ -326,6 +402,13 @@ pathIndex(anl.paths)
 
 
 ### Variable-based Tools ###
+
+# Get list of pressure-level fields
+pvars = varList(base, varmap, 'pl')
+
+# Create variable-specific index files
+varLinks(pvars)
+varIndex(pvars)
 
 # Create new variable index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar.tmpl'), "rt") as fdin:
