@@ -67,6 +67,7 @@ exp = 'WP-MIP'
 base = os.path.join('/home/swpm001/public_html', exp)
 fbase = os.path.join(base, 'forecasts')
 html_path = '/home/swpm001/public_html'
+indexdir = os.path.join(html_path, exp, 'vindex')
 test_pl = 'gh'
 test_sl = '2t'
 model_defaults = defaultdict(dict)
@@ -202,7 +203,6 @@ def varList(base, map, lev):
     return(vlist)
 
 def varLinks(vlist):
-    indexdir = os.path.join(html_path, exp, 'vindex')
     mkdirp(indexdir)
     for (k, v) in vlist.items():
         vardir = os.path.join(indexdir, k)
@@ -228,7 +228,9 @@ def varTable(vlist, prod, lev):
         vtbl += '<tr><td>'+varmap[lev][vname]['long']+'</td>'+tdstyle+vname+'</td>'+tdstyle+ \
             varmap[lev][vname]['units']+'</td>'
         if lev == 'pl':
-            vtbl += tdstyle+','.join(map(str, levsmap[lev]))+'</td>'
+            vardir = os.path.join(indexdir, vname)
+            vtbl += tdstyle+','.join(map(lambda v: '<a href="'+os.path.join(vardir, str(v))+'">'+str(v)+'</a>', \
+                                         levsmap[lev]))+'</td>'
         vtbl += '</tr>\n'
     return(vtbl)
 
