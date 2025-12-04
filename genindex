@@ -216,7 +216,6 @@ def varLinks(vlist):
                     [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
 
 def varTable(vlist, prod, lev):
-    vtbl = ' '
     allvars = []
     for (vname, vlist) in vlist.items():
         for var in vlist:
@@ -224,11 +223,18 @@ def varTable(vlist, prod, lev):
                 allvars.append(vname)
     allvars = sorted(list(set(allvars)), key=lambda vname: varmap[lev][vname]['long'])
     tdstyle = '<td style="text-align: center;">'
+    vtbl = ' '
     for vname in allvars:
-        vtbl += '<tr><td>'+varmap[lev][vname]['long']+'</td>'+tdstyle+vname+'</td>'+tdstyle+ \
+        vardir = os.path.join(indexdir, vname)
+        if lev == 'sl':
+            hlinks = '<a href="'+vardir+'">'
+            hlinke = '</a>'
+        else:
+            hlinks = ''
+            hlinke = ''
+        vtbl += '<tr><td>'+hlinks+varmap[lev][vname]['long']+hlinke+'</td>'+tdstyle+vname+'</td>'+tdstyle+ \
             varmap[lev][vname]['units']+'</td>'
         if lev == 'pl':
-            vardir = os.path.join(indexdir, vname)
             vtbl += tdstyle+','.join(map(lambda v: '<a href="'+os.path.join(vardir, str(v))+'">'+str(v)+'</a>', \
                                          levsmap[lev]))+'</td>'
         vtbl += '</tr>\n'
