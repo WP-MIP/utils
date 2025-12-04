@@ -174,6 +174,7 @@ class Contrib(dict):
 class Var(dict):
     
     def __init__(self, base, lev, dir):
+        self['base'] = base
         self.base = base
         self.lev = lev
         self.levs = levsmap[lev]
@@ -182,8 +183,6 @@ class Var(dict):
         self.fullpath = os.path.join(self.base, self.path)
         self.name = path[-1]
         self.prod = path[0]
-        print(path)
-        print(self.prod)
         if self.prod == 'analyses':
             self.centre = path[1]
         else:
@@ -215,10 +214,23 @@ def varLinks(vlist):
                     mkdirp(levdir)
                     flist = glob.glob(os.path.join(var.fullpath, var.name+'_'+str(lev)+'_'+'*.grib2'))
                     [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
-        #for lev in 
-        #[os.symlink(var.fullpath, os.path.join(vdir)]
-        #print(k)
-        #print(len(v))
+
+def varTable(vlist, prod, lev):
+    vtbl = ' '
+    allvars = []
+    for (vname, vlist) in vlist.items():
+        for var in vlist:
+            if var.prod == prod:
+                allvars.append(vname)
+    allvars = sorted(list(set(allvars)), key=lambda vname: varmap[lev][vname]['long'])
+    tdstyle = '<td style="text-align: center;">'
+    for vname in allvars:
+        vtbl += '<tr><td>'+varmap[lev][vname]['long']+'</td>'+tdstyle+vname+'</td>'+tdstyle+ \
+            varmap[lev][vname]['units']+'</td>'
+        if lev == 'pl':
+            vtbl += tdstyle+','.join(map(str, levsmap[lev]))+'</td>'
+        vtbl += '</tr>\n'
+    return(vtbl)
 
 def mkdirp(dir):
     try:
@@ -235,14 +247,6 @@ def symlinkf(target, link):
         if rlink != rtarget:
             sys.stderr.write('Error: link/target mismatch.\n  Link:   '+rlink+'\n  Target: '+rtarget+'\n')
             raise
-    
-def varIndex(vlist):
-    vdir = os.path.join(html_path, 'vindex')
-    try:
-        os.mkdir(vdir)
-    except FileExistsError:
-        pass
-    
     
 def pathIndex(paths):
     inlines = {}
@@ -396,25 +400,29 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_co
             fdout.write(line)
 
 # Create model-specific index files
-pathIndex(oic.paths)
-pathIndex(sic.paths)
-pathIndex(anl.paths)
+#pathIndex(oic.paths)
+#pathIndex(sic.paths)
+#pathIndex(anl.paths)
 
 
 ### Variable-based Tools ###
 
 # Get list of pressure-level fields
 pvars = varList(base, varmap, 'pl')
+svars = varList(base, varmap, 'sl')
 
-# Create variable-specific index files
-varLinks(pvars)
-varIndex(pvars)
+# Create variable-specific index links
+#varLinks(pvars)
 
 # Create new variable index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar.tmpl'), "rt") as fdin:
     with open(os.path.join(html_path, "index_byvar.html"), "wt") as fdout:
         for line in fdin:
             line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
+            line = line.replace('FCSTPL_TABLE_DATA', varTable(pvars, 'forecasts', 'pl'))
+            line = line.replace('FCSTSL_TABLE_DATA', varTable(svars, 'forecasts', 'sl'))
+            line = line.replace('ANLPL_TABLE_DATA', varTable(pvars, 'analyses', 'pl'))
+            line = line.replace('ANLSL_TABLE_DATA', varTable(svars, 'analyses', 'sl'))
             line = line.replace('EDIT_WARNING', edit_warning)
             fdout.write(line)
 
