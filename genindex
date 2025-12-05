@@ -68,6 +68,7 @@ base = os.path.join('/home/swpm001/public_html', exp)
 fbase = os.path.join(base, 'forecasts')
 html_path = '/home/swpm001/public_html'
 vindex = 'vindex'
+indexdir = os.path.join(html_path, exp, vindex)
 test_pl = 'gh'
 test_sl = '2t'
 model_defaults = defaultdict(dict)
@@ -203,18 +204,25 @@ def varList(base, map, lev):
     return(vlist)
 
 def varLinks(vlist):
-    indexdir = os.path.join(html_path, exp, vindex)
     mkdirp(indexdir)
     for (k, v) in vlist.items():
         vardir = os.path.join(indexdir, k)
         mkdirp(vardir)
         for var in v:
-            if var.lev == 'pl':
-                for lev in var.levs:
-                    levdir = os.path.join(vardir, str(lev))
-                    mkdirp(levdir)
+            for lev in var.levs:
+                var["levdir"] = os.path.join(vardir, str(lev))
+                mkdirp(var["levdir"])
+                if var.lev == 'pl':
                     flist = glob.glob(os.path.join(var.fullpath, var.name+'_'+str(lev)+'_'+'*.grib2'))
-                    [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
+                else:
+                    flist = glob.glob(os.path.join(var.fullpath, var.name+'*.grib2'))
+                [symlinkf(fn, os.path.join(var["levdir"], os.path.basename(fn))) for fn in flist]
+
+#def varHtml(vlist):
+#    for (k, v) in vlist.items():
+#        for var in v:
+            
+    
 
 def varTable(vlist, prod, lev):
     allvars = []
@@ -421,7 +429,7 @@ pvars = varList(base, varmap, 'pl')
 svars = varList(base, varmap, 'sl')
 
 # Create variable-specific index links
-#varLinks(pvars)
+varLinks(pvars)
 
 # Create new variable index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar.tmpl'), "rt") as fdin:
