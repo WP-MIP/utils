@@ -36,7 +36,7 @@ varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa', 'id'
                      '10v':{'long':'Anemometer-Level V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'166'},
                      'tp':{'long':'Precipitation Accumulation', 'units':'kg m<sup>-2</sup>', 'id':'228228'},
                      'ci':{'long':'Sea Ice Fraction', 'units':'', 'id':'31'},
-                     'sithink':{'long':'Sea Ice Thickness', 'units':'m', 'id':'174098'},
+                     'sithick':{'long':'Sea Ice Thickness', 'units':'m', 'id':'174098'},
                      'tcc':{'long':'Total Cloud Cover', 'units':'%', 'id':'228164'},
                      'lcc':{'long':'Low Cloud Cover', 'units':'%', 'id':'3073'},
                      'mcc':{'long':'Mid Cloud Cover', 'units':'%', 'id':'3074'},
@@ -45,11 +45,11 @@ varmap['sl'] = dict({'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa', 'id'
                      'ssrd':{'long':'Surface Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'169'},
                      'str':{'long':'Surface Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'175'},
                      'strd':{'long':'Surface Downwelling Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'177'},
-                     'str':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'178'},
+                     'tsr':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'178'},
                      'tisr':{'long':'TOA Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'179'},
                      'ttr':{'long':'TOA Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'212'},
                      'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'146'},
-                     'shlf':{'long':'Time-Integrated Surface Latent Heat Fklux', 'units':'J m<sup>-2</sup>', 'id':'147'},
+                     'slhf':{'long':'Time-Integrated Surface Latent Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'147'},
                      'lsm':{'long':'Land-Sea Mask', 'units':'', 'id':'172'},
                      'orog':{'long':'Orography', 'units':'m', 'id':'228002'}})
 
@@ -194,37 +194,216 @@ class Var(dict):
             self.ty = tyver[0]
             self.ver = tyver[1]
 
-def varList(base, map, lev):
+
+def varid(varname, lev, prod):
+    return('_'.join([varname, str(lev), prod]))
+            
+def varList():
     vlist = {}
-    for var in map[lev].keys():
-        dirs = []
-        for subdir in ['analyses', 'forecasts']:
-            dirs += glob.glob(os.path.join(subdir, '**', var), root_dir=base, recursive=True)
-        vlist[var] = [Var(base, lev, dir) for dir in dirs]
+    for prod in ['analyses', 'forecasts']:
+        for file in glob.iglob(os.path.join(prod, '**', '*.grib2'), root_dir=base, recursive=True):
+            try:
+                vpg = varPage(file)
+            except ValueError:
+                continue
+            try:
+                vlist[varid(vpg["varname"], vpg["lev"], prod)].add(vpg)
+            except KeyError:
+                vlist[varid(vpg["varname"], vpg["lev"], prod)] = vpg
     return(vlist)
 
 def varLinks(vlist):
+    [vpg.buildLinks() for vpg in vlist.values()]
+
+def varPages(vlist):
+    [vpg.buildPage() for vpg in vlist.values()]
+
+def varTable(vlist, prod, lev):
+    tbl = []
+    for var in varmap[lev].keys():
+        tdc = '<td style="text-align: center;">'
+        vtbl = ''
+        if lev == 'sl':
+            try:
+                hlinks = '<a href="'+vlist[varid(var, 1, prod)].pageLink()+'">'
+                hlinke = '</a>'
+            except KeyError:
+                continue
+        else:
+            hlinks = ''
+            hlinke = ''
+        vtbl += '<tr><td>'+hlinks+varmap[lev][var]['long']+hlinke+'</td>'+tdc+var+'</td>'+tdc+ \
+            varmap[lev][var]['units']+'</td>'
+        if lev == 'pl':
+            vtbl += tdc+','.join(map(lambda v: '<a href="'+vlist[varid(var, v, prod)].pageLink()+'">'+ \
+                                     str(v)+'</a>', levsmap[lev]))+'</td>'
+        vtbl += '</tr>\n'
+        tbl.append(vtbl)
+    return('\n'.join(sorted(tbl)))
+            
+class varPage(dict):
+
+    def __init__(self, fpath):
+        self["flist"] = [fpath]
+        path = re.split('/', fpath)
+        self["prod"] = path[0]
+        self["varname"] = path[-2]
+        fname = path[-1]
+        if re.search('_pl_', fname):
+            self["levty"] = 'pl'
+            lev = int(re.split('_', fname)[1])
+            if lev in levsmap[self["levty"]]: 
+                self["lev"] = int(re.split('_', fname)[1])
+            else:
+                raise ValueError
+        else:
+            self["levty"] = 'sl'
+            self["lev"] = 1
+
+    def pagePath(self):
+        return(os.path.join(html_path, self.pageLink()))
+                                        
+    def pageLink(self):
+        return(os.path.join(exp, vindex, self["varname"], str(self["lev"]), 'index_'+self["prod"]+'.html'))
+                            
+    def add(self, new):
+        self["flist"].extend(new["flist"])
+
+    def buildLinks(self):
+        indexdir = os.path.dirname(self.pagePath())
+        os.makedirs(indexdir, exist_ok=True)
+        for dfile in self["flist"]:
+            fn = os.path.basename(dfile)
+            self._symlinkf(os.path.join(base, dfile), os.path.join(indexdir, fn))  
+            
+    def buildPage(self):
+        os.makedirs(os.path.dirname(self.pagePath()), exist_ok=True)
+        table = []
+        for fn in self["flist"]:
+            table.append(self._tableRow(self._fileInfo(fn)))
+        tablestr = '\n'.join(sorted(table))
+        titlestr = ' '.join(['<center><h1>WP-MIP',varmap[self["levty"]][self["varname"]]['long'], \
+                           self["prod"].capitalize()])
+        if self["levty"] == 'pl':
+            titlestr += ' ('+str(self["lev"])+' hPa)'
+        titlestr += '</h1></center>'
+        filestr = self._fntemplate()
+        eginfo = self._fileInfo(self["flist"][0])
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar_var.tmpl'), "rt") as fdin:
+            with open(self.pagePath(), "wt") as fdout:
+                for line in fdin:
+                    line = line.replace('TITLE', titlestr)
+                    line = line.replace('PRODLOWER', self["prod"])
+                    line = line.replace('PRODCAP', self["prod"].capitalize())
+                    line = line.replace('VARLONG', varmap[self["levty"]][self["varname"]]['long'].lower())
+                    line = line.replace('VARCAP', varmap[self["levty"]][self["varname"]]['long'])
+                    line = line.replace('FILESTR', filestr)
+                    line = line.replace('VARPATH', os.path.dirname(self.pageLink()))
+                    line = line.replace('CONTR4', eginfo["centre"])
+                    line = line.replace('CONTRIBUTOR', namemap[eginfo["centre"]]['name'])
+                    line = line.replace('TABLE_DATA', tablestr)
+                    line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
+                    line = line.replace('EDIT_WARNING', edit_warning)
+                    fdout.write(line)
+
+    def _tableRow(self, info):
+        tdc = '</td><td  style="text-align: center;">'
+        fname = os.path.basename(info["fname"])
+        return('<tr><td><a href="'+fname+'">'+fname+'</a>'+tdc+info["centre"]+tdc+info["stream"]+tdc+info["ty"]+ \
+               tdc+str(info["ver"])+tdc+calendar.month_name[info["mon"]]+' '+str(info["year"])+'</td></tr>')
+
+    def _fileInfo(self, fn):
+        path = re.split('/', fn)
+        if self["prod"] == "analyses":
+            stream = 'Analysis'
+            centre = path[1]
+            ty = 'pm'
+            ver = 0
+        else:
+            stream = path[1]
+            centre = path[2]
+            (ty, ver) = re.split('_', path[3])
+        mon = int(re.split('[_\.]', fn)[-2])
+        year = 2024
+        while mon > 12:
+            year += 1
+            mon -= 12
+        return({'stream':stream, 'centre':centre, 'ty':ty, 'ver':ver, 'mon':mon, 'year':year, 'fname':fn})
+               
+    def _symlinkf(self, target, link):
+        print('linking '+link+' to '+target)
+        try:
+            os.symlink(target, link)
+        except FileExistsError:
+            rtarget = os.path.realpath(target)
+            rlink = os.path.realpath(link)
+            if rlink != rtarget:
+                sys.stderr.write('Error: link/target mismatch.\n  Link:   '+rlink+'\n  Target: '+rtarget+'\n')
+                raise
+
+    def _fntemplate(self):
+        fsplit = re.split('_', os.path.basename(self["flist"][0]))
+        fsplit[-1] = 'NN.grib2'
+        if self["prod"] == 'analyses':
+            fsplit[-3] = 'CCCC'
+        else:
+            fsplit[-6] = 'SSS'
+            fsplit[-5] = 'CCCC'
+            fsplit[-4] = 'MM'
+            fsplit[-3] = 'II'
+        return('_'.join(fsplit))
+            
+#def varList(base, map, lev):
+#    vlist = {}
+#    for var in map[lev].keys():
+#        dirs = []
+#        for prod in ['analyses', 'forecasts']:
+#            dirs += glob.glob(os.path.join(prod, '**', var), root_dir=base, recursive=True)
+#        vlist[var] = [Var(base, lev, dir) for dir in dirs]
+#    return(vlist)
+
+def varLinks_old(vlist, doLinks=True):
     mkdirp(indexdir)
+    pages = {}
     for (k, v) in vlist.items():
         vardir = os.path.join(indexdir, k)
         mkdirp(vardir)
         for var in v:
             for lev in var.levs:
-                var["levdir"] = os.path.join(vardir, str(lev))
-                mkdirp(var["levdir"])
+                levdir = os.path.join(vardir, str(lev))
+                mkdirp(levdir)
                 if var.lev == 'pl':
                     flist = glob.glob(os.path.join(var.fullpath, var.name+'_'+str(lev)+'_'+'*.grib2'))
                 else:
                     flist = glob.glob(os.path.join(var.fullpath, var.name+'*.grib2'))
-                [symlinkf(fn, os.path.join(var["levdir"], os.path.basename(fn))) for fn in flist]
+                entry = {'var':var, 'flist':flist}
+                try:
+                    pages[levdir].append(entry)
+                except KeyError:
+                    pages[levdir] = [entry]
+                if not doLinks: continue
+                [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
+    for (k, v) in pages.items():
+        if k == '/home/swpm001/public_html/WP-MIP/vindex/gh/700':
+            print(' '.join([var['var'].fullpath for var in v]))
+            print(' '.join([var['flist'] for var in v]))
 
-#def varHtml(vlist):
-#    for (k, v) in vlist.items():
-#        for var in v:
+def varHtml(levdir, var, flist):
+    pages = {}
+    for (k, v) in vlist.items():
+        for var in v:
+            for lev in var.levs:
+                levdir = os.path.join(indexdir, k, str(lev))
+                try:
+                    pages[levdir].append(var)
+                except KeyError:
+                    pages[levdir] = [var]
+    for (k, v) in pages.items():
+        if k == '/home/swpm001/public_html/WP-MIP/vindex/gh/700':
+            print(' '.join([var.fullpath for var in v]))
+
             
-    
-
-def varTable(vlist, prod, lev):
+def varTable_old(vlist, prod, lev):
     allvars = []
     for (vname, vlist) in vlist.items():
         for var in vlist:
@@ -249,11 +428,6 @@ def varTable(vlist, prod, lev):
         vtbl += '</tr>\n'
     return(vtbl)
 
-def mkdirp(dir):
-    try:
-        os.mkdir(dir)
-    except FileExistsError:
-        pass
 
 def symlinkf(target, link):
     try:
@@ -424,22 +598,40 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_co
 
 ### Variable-based Tools ###
 
+# Get variable-listed set of files
+vlist = varList()
+
+# Create links in variable-listed index
+#varLinks(vlist)
+
+# Create variable-specific pages
+varPages(vlist)
+
+
+
+
+
 # Get list of pressure-level fields
-pvars = varList(base, varmap, 'pl')
-svars = varList(base, varmap, 'sl')
+#pvars = varList(base, varmap, 'pl')
+#svars = varList(base, varmap, 'sl')
 
 # Create variable-specific index links
-varLinks(pvars)
+#varLinks(pvars)
+#varLinks(pvars, doLinks=False)
+
+# Create variable-specific pages
+#varHtml(pvars, 'forecasts')
+#varHtml(pvars, 'analyses')
 
 # Create new variable index file
 with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_byvar.tmpl'), "rt") as fdin:
     with open(os.path.join(html_path, "index_byvar.html"), "wt") as fdout:
         for line in fdin:
             line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
-            line = line.replace('FCSTPL_TABLE_DATA', varTable(pvars, 'forecasts', 'pl'))
-            line = line.replace('FCSTSL_TABLE_DATA', varTable(svars, 'forecasts', 'sl'))
-            line = line.replace('ANLPL_TABLE_DATA', varTable(pvars, 'analyses', 'pl'))
-            line = line.replace('ANLSL_TABLE_DATA', varTable(svars, 'analyses', 'sl'))
+            line = line.replace('FCSTPL_TABLE_DATA', varTable(vlist, 'forecasts', 'pl'))
+            line = line.replace('FCSTSL_TABLE_DATA', varTable(vlist, 'forecasts', 'sl'))
+            line = line.replace('ANLPL_TABLE_DATA', varTable(vlist, 'analyses', 'pl'))
+            line = line.replace('ANLSL_TABLE_DATA', varTable(vlist, 'analyses', 'sl'))
             line = line.replace('EDIT_WARNING', edit_warning)
             fdout.write(line)
 
