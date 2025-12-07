@@ -329,7 +329,7 @@ def varTable(vlist, prod, lev):
         vtbl += '<tr><td>'+hlinks+varmap[lev][var]['long']+hlinke+'</td>'+tdc+var+'</td>'+tdc+ \
             varmap[lev][var]['units']+'</td>'
         if lev == 'pl':
-            vtbl += tdc+','.join(map(lambda v: '<a href="'+vlist[varid(var, v, prod)].pageLink()+'">'+ \
+            vtbl += tdc+', '.join(map(lambda v: '<a href="'+vlist[varid(var, v, prod)].pageLink()+'">'+ \
                                      str(v)+'</a>', levsmap[lev]))+'</td>'
         vtbl += '</tr>\n'
         tbl.append(vtbl)
