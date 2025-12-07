@@ -282,10 +282,11 @@ class varPage(dict):
         for fn in self["flist"]:
             table.append(self._tableRow(self._fileInfo(fn)))
         tablestr = '\n'.join(sorted(table))
-        titlestr = ' '.join(['<center><h1>WP-MIP',varmap[self["levty"]][self["varname"]]['long'], \
-                           self["prod"].capitalize()])
+        prefix = '<center><h1>WP-MIP'
         if self["levty"] == 'pl':
-            titlestr += ' ('+str(self["lev"])+' hPa)'
+            prefix += ' '+str(self["lev"])+' hPa'
+        titlestr = ' '.join([prefix,varmap[self["levty"]][self["varname"]]['long'], \
+                           self["prod"].capitalize()])
         titlestr += '</h1></center>'
         filestr = self._fntemplate()
         eginfo = self._fileInfo(self["flist"][0])
@@ -310,8 +311,8 @@ class varPage(dict):
     def _tableRow(self, info):
         tdc = '</td><td  style="text-align: center;">'
         fname = os.path.basename(info["fname"])
-        return('<tr><td><a href="'+fname+'">'+fname+'</a>'+tdc+namemap[info["centre"]]["name"]+tdc+ \
-               info["stream"].upper()+tdc+typemap[info["ty"]]+tdc+str(info["ver"])+tdc+ \
+        return('<tr><td><a href="'+fname+'">'+fname+'</a>'+tdc+info["stream"].upper()+tdc+ \
+               namemap[info["centre"]]["name"]+tdc+typemap[info["ty"]]+tdc+str(info["ver"])+tdc+ \
                calendar.month_name[info["mon"]]+' '+str(info["year"])+'</td></tr>')
 
     def _fileInfo(self, fn):
@@ -333,7 +334,6 @@ class varPage(dict):
         return({'stream':stream, 'centre':centre, 'ty':ty, 'ver':ver, 'mon':mon, 'year':year, 'fname':fn})
                
     def _symlinkf(self, target, link):
-        print('linking '+link+' to '+target)
         try:
             os.symlink(target, link)
         except FileExistsError:
@@ -354,38 +354,12 @@ class varPage(dict):
             fsplit[-4] = 'MM'
             fsplit[-3] = 'II'
         return('_'.join(fsplit))
-            
-#def varList(base, map, lev):
-#    vlist = {}
-#    for var in map[lev].keys():
-#        dirs = []
-#        for prod in ['analyses', 'forecasts']:
-#            dirs += glob.glob(os.path.join(prod, '**', var), root_dir=base, recursive=True)
-#        vlist[var] = [Var(base, lev, dir) for dir in dirs]
-#    return(vlist)
 
-def varLinks_old(vlist, doLinks=True):
-    mkdirp(indexdir)
-    pages = {}
-    for (k, v) in vlist.items():
-        vardir = os.path.join(indexdir, k)
-        mkdirp(vardir)
-        for var in v:
-            for lev in var.levs:
-                levdir = os.path.join(vardir, str(lev))
-                mkdirp(levdir)
-                if var.lev == 'pl':
-                    flist = glob.glob(os.path.join(var.fullpath, var.name+'_'+str(lev)+'_'+'*.grib2'))
-                else:
-                    flist = glob.glob(os.path.join(var.fullpath, var.name+'*.grib2'))
-                entry = {'var':var, 'flist':flist}
-                try:
-                    pages[levdir].append(entry)
-                except KeyError:
-                    pages[levdir] = [entry]
-                if not doLinks: continue
-                [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
 
+
+
+
+    
 def varHtml(levdir, var, flist):
     pages = {}
     for (k, v) in vlist.items():
@@ -596,7 +570,7 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_co
 vlist = varList()
 
 # Create links in variable-listed index
-#varLinks(vlist)
+varLinks(vlist)
 
 # Create variable-specific pages
 varPages(vlist)
