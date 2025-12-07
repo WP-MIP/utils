@@ -301,6 +301,7 @@ class varPage(dict):
                     line = line.replace('VARPATH', os.path.dirname(self.pageLink()))
                     line = line.replace('CONTR4', eginfo["centre"])
                     line = line.replace('CONTRIBUTOR', namemap[eginfo["centre"]]['name'])
+                    line = line.replace('GRIBID', varmap[self["levty"]][self["varname"]]['id'])
                     line = line.replace('TABLE_DATA', tablestr)
                     line = line.replace('GEN_DATETIME', datetime.utcnow().strftime('%H%M UTC %d %h %Y'))
                     line = line.replace('EDIT_WARNING', edit_warning)
@@ -309,8 +310,9 @@ class varPage(dict):
     def _tableRow(self, info):
         tdc = '</td><td  style="text-align: center;">'
         fname = os.path.basename(info["fname"])
-        return('<tr><td><a href="'+fname+'">'+fname+'</a>'+tdc+info["centre"]+tdc+info["stream"]+tdc+info["ty"]+ \
-               tdc+str(info["ver"])+tdc+calendar.month_name[info["mon"]]+' '+str(info["year"])+'</td></tr>')
+        return('<tr><td><a href="'+fname+'">'+fname+'</a>'+tdc+namemap[info["centre"]]["name"]+tdc+ \
+               info["stream"].upper()+tdc+typemap[info["ty"]]+tdc+str(info["ver"])+tdc+ \
+               calendar.month_name[info["mon"]]+' '+str(info["year"])+'</td></tr>')
 
     def _fileInfo(self, fn):
         path = re.split('/', fn)
@@ -383,10 +385,6 @@ def varLinks_old(vlist, doLinks=True):
                     pages[levdir] = [entry]
                 if not doLinks: continue
                 [symlinkf(fn, os.path.join(levdir, os.path.basename(fn))) for fn in flist]
-    for (k, v) in pages.items():
-        if k == '/home/swpm001/public_html/WP-MIP/vindex/gh/700':
-            print(' '.join([var['var'].fullpath for var in v]))
-            print(' '.join([var['flist'] for var in v]))
 
 def varHtml(levdir, var, flist):
     pages = {}
@@ -398,10 +396,6 @@ def varHtml(levdir, var, flist):
                     pages[levdir].append(var)
                 except KeyError:
                     pages[levdir] = [var]
-    for (k, v) in pages.items():
-        if k == '/home/swpm001/public_html/WP-MIP/vindex/gh/700':
-            print(' '.join([var.fullpath for var in v]))
-
             
 def varTable_old(vlist, prod, lev):
     allvars = []
