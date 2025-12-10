@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# Process Linus-type analysis data to monthly WP-MIP archive format
+
+# Basic configurations
+obase=/home/swpm001/local/hpfx/analyses
+idate=20240101
+split_files=1
+concat_files=1
+
+# Split into daily files
+splitday(){
+    rules=${1}
+    fname=${2}
+    grib_filter ${rules} ${fname}
+}
+
+# Concatenate grib files
+gribcat(){
+    obase=${1}
+    ifile=${2}
+    
+    # Process file name
+    fn=$(basename ${ifile})
+    var=$(echo ${fn} | cut -d '_' -f 1)
+    unset levname
+    if [[ $(echo ${fn} | grep '_pl_' | wc -l) -gt 0 ]] ; then
+	levname=$(echo ${fn} | cut -d '_' -f 2)_
+        cccc=$(echo ${fn} | cut -d '_' -f 3)
+    else
+        cccc=$(echo ${fn} | cut -d '_' -f 2)
+    fi
+
+    # Create final archive structure
+    fullpath=${obase}/${cccc}/${var}
+    mkdir -p ${fullpath}
+
+    # Concatenate matching inputs into final grib file
+    for month in $(seq 1 13) ; do
+	ofile=${fullpath}/$(basename ${ifile} | sed "s|${idate}|$(printf "%02d" ${month})|")
+	iyear=$(echo ${idate} | cut -c 1-4)
+	imonth=${month}
+	if [[ ${imonth} -gt 12 ]] ; then
+	    imonth=$((${imonth} - 12))
+	    iyear=$((${iyear} + 1))
+	fi
+	imonth=$(printf "%02d" ${imonth})
+	cat $(dirname ${ifile})/${var}_${levname}*${iyear}${imonth}??.* >${ofile}
+    done
+}
+
+# Create common filter file
+splitdir=split
+mkdir -p ${splitdir}
+filterfile=filt.txt
+cat >${filterfile} <<EOF
+write "${splitdir}/[shortName]_[level]_[centre]_[levelType]_[date].grib[editionNumber]";
+EOF
+
+# Process all files in the directory into individual times
+if [[ ${split_files} -gt 0 ]] ; then
+    for file in *.gr* ; do
+	splitday ${filterfile} ${file} &
+    done
+    wait
+fi
+
+# Concatenate into monthly files
+if [[ ${concat_files} -gt 0 ]] ; then
+    for ifile in ${splitdir}/*${idate}*; do
+	gribcat ${obase} ${ifile} &
+    done
+    wait
+fi
