@@ -1,0 +1,35 @@
+
+	* {
+	    font-family: Veranda,Arial,helvetica,sans-serif;
+	}
+	
+        .table-style-one table { width: 100%; border-collapse: collapse; /* Essential
+            for border-bottom on tr or td */ }
+
+        .table-style-one th, td { padding: 8px; text-align: left; border-bottom: 1px
+            solid #ddd; /* Default bottom border for cells */ }
+
+        .table-style-one tr:hover { background-color: #f5f5f5; /* Optional: highlight
+            row on hover */ }
+
+        .table-style-one tr:hover td { border-bottom: 2px solid blue; /* Thicker, blue
+            bottom border on hover */ }
+
+	.container {
+	    display: grid;
+	    align-items: center;
+	    grid-template-columns: 1fr 2fr;
+	    column-gap: 0px;
+	    background: lightgrey;
+	}
+
+	img {
+	    max-width: 70%;
+	    max-height: 100%;
+	    align-items: left;
+	}
+
+	.titletext {
+	    font-size: 24px;
+	    text-decoration: none ;
+	}
