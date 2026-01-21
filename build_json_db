@@ -1,0 +1,255 @@
+basedir=~/public_html/WP-MIP
+dbanal=analyses
+dbfcst=forecasts
+
+streams="${dbanal} ${dbfcst}/*"
+
+streamtype="oic:Other_Initial_Conditions sic:Self_Initial_Conditions"
+contribs="cwao:ECCC ecmf:ECMWF kwbc:NOAAN rksl:KMA/KIAPS ammc:BoM babj:CMAC sbsj:CPTEC/INPEC edzw:DWD vabb:IMD rjtd:JMA egrr:UKMO enmi:MetNo rums:RAS"
+models="ai:AI hy:Hybrid pm:Physical"
+lvltyp="pl:Pressure-Level sl:Single-Level"
+varnames="'vardict':{
+                     't':{'long':'Temperature', 'units':'K', 'id':'130'},
+                     'q':{'long':'Specific Humidity', 'units':'kg kg<sup>-1</sup>', 'id':'133'},
+                     'u':{'long':'U-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'131'},
+                     'v':{'long':'V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'132'},
+                     'gh':{'long':'Geopential Height', 'units':'m', 'id':'156'},
+                     'msl':{'long':'Mean Sea Level Pressure', 'units':'Pa', 'id':'151'},
+                     'sp':{'long':'Surface Pressure', 'units':'Pa', 'id':'134'},
+                     '2t':{'long':'Screen-Level Temperature', 'units':'K', 'id':'167'},
+                     '2sh':{'long':'Screen-Level Specific Humidity', 'units':'kg kg<sup>-1</sup>', 'id':'174096'},
+                     '2d':{'long':'Screen-Level Dewpoint', 'units':'K', 'id':'168'},
+                     'sst':{'long':'Sea Surface Temperature', 'units':'K', 'id':''},
+                     '10u':{'long':'Anemometer-Level U-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'165'},
+                     '10v':{'long':'Anemometer-Level V-Component Wind', 'units':'m s<sup>-1</sup>', 'id':'166'},
+                     'tp':{'long':'Precipitation Accumulation', 'units':'kg m<sup>-2</sup>', 'id':'228228'},
+                     'ci':{'long':'Sea Ice Fraction', 'units':'', 'id':'31'},
+                     'sithick':{'long':'Sea Ice Thickness', 'units':'m', 'id':'174098'},
+                     'tcc':{'long':'Total Cloud Cover', 'units':'%', 'id':'228164'},
+                     'lcc':{'long':'Low Cloud Cover', 'units':'%', 'id':'3073'},
+                     'mcc':{'long':'Mid Cloud Cover', 'units':'%', 'id':'3074'},
+                     'hcc':{'long':'High Cloud Cover', 'units':'%', 'id':'3075'},
+                     'ssr':{'long':'Surface Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'176'},
+                     'ssrd':{'long':'Surface Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'169'},
+                     'str':{'long':'Surface Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'175'},
+                     'strd':{'long':'Surface Downwelling Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'177'},
+                     'tsr':{'long':'TOA Net Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'178'},
+                     'tisr':{'long':'TOA Downwelling Shortwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'179'},
+                     'ttr':{'long':'TOA Net Longwave Accumulation', 'units':'J m<sup>-2</sup>', 'id':'212'},
+                     'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'146'},
+                     'slhf':{'long':'Time-Integrated Surface Latent Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'147'},
+                     'lsm':{'long':'Land-Sea Mask', 'units':'', 'id':'172'},
+                     'orog':{'long':'Orography', 'units':'m', 'id':'228002'}
+}"
+
+
+# ==== dataset layout ====
+# /CCCC/MM_II/var/param+level+SSS_CCCC_MON_MM_II_LL.gib2
+# /analyses/     CCCC/     /var/{surfvar,var_level}_    LL_II.grib2
+# /forecasts/SSS/CCCC/MM_II/var/{surfvar,var_level}_SSS_LL_II.grib2
+
+# analyses/     cwao/      10u/ 10u_       cwao_      sl_01.grib2
+# analyses/     cwao/      u/   u_1000_    cwao_      pl_01.grib2
+# forecasts/oic/cwao/pm_00/10u/ 10u_   oic_cwao_pm_00_sl_01.grib2
+# forecasts/oic/cwao/pm_00/u/   u_1000_oic_cwao_pm_00_pl_01.grib2
+
+# SSS: Steam (analyses, oic:forecasts/oic, sic:forecasts/sic)
+# CCCC: center acronym
+# MM: Model type (pm,ai,hy)
+# II: Iteration number (from 0)
+# LL: Level Type (pl,sl)
+# MON: Month
+
+apl=analyses/CCCC/VAR/VAR_LVL_CCCC_LL_MON.grib2
+asl=analyses/CCCC/VAR/VAR_CCCC_LL_MON.grib2
+fpl=forecasts/SSS/CCCC/MM_II/VAR/VAR_LVL_SSS_CCCC_MM_II_LL_MON.grib2
+fsl=forecasts/SSS/CCCC/MM_II/VAR/VAR_SSS_CCCC_MM_II_LL_MON.grib2
+aaa="apl asl fpl fsl"
+
+mystderr() {
+   if [[ ${debug:-0} == 1 ]] ; then
+      echo "+ $*" 1>&2
+   fi
+}
+
+getlist() {
+   (
+      cd ${basedir}/$1 && ls -1 || echo ""
+   )
+}
+getsss() {
+   _s=$1
+   if [[ x${_s} == xanalyses ]] ; then
+      echo oic
+   else
+      getlist ${_s}
+   fi
+}
+getcccc() {
+   _s=$1
+   _l=""
+   for _x in ${_s} ; do
+      _l="${_l} $(getlist ${_x})"
+   done
+   echo ${_l} | tr ' ' '\n' | sort -u
+}
+getmm() {
+   _s=$1
+   if [[ x${_s%%/*} == xanalyses ]] ; then
+      echo pm
+   else
+      getlist ${_s} | tr ' ' '\n' | cut -d_ -f1  | sort -u| tr '\n' ' '
+   fi
+}
+getii() {
+   _s=$1
+   _t=$2
+   if [[ x${_s%%/*} == xanalyses ]] ; then
+      echo 00
+   else
+      getlist ${_s} | grep ${_t}_ | tr ' ' '\n' | cut -d_ -f2  | sort -u| tr '\n' ' '
+   fi
+}
+
+getvar() {
+   _s=$1
+   _t=$2
+   (
+      cd ${basedir}/${_s} && \
+      find . -type f -name "*_${_t}_??.grib2" | cut -d/ -f2 | sort -u
+   )
+}
+
+getlvl() {
+   _s=$1
+   (
+      cd ${basedir}/${_s} && \
+      _v=${_s##*/} && \
+      ls ${_v}* | cut -d_ -f2 | sort -u
+   )
+}
+
+getmon() {
+   _s=$1
+   _l=$2
+   (
+      cd ${basedir}/${_s}
+      _v=${_s##*/}
+      if [[ x${_l} == x ]] ; then
+         _m=$(ls ${_v}* | cut -d_ -f4- | cut -d. -f1 | sort -u)
+      else
+         _m=$(ls ${_v}_${_l}* | cut -d_ -f4- | cut -d. -f1 | sort -u)
+      fi
+      _n=""
+      for _x in ${_m} ; do
+         _n="${_n} ${_x##*_}"
+      done
+      echo ${_n}
+   )
+}
+
+
+json_content="{}"
+addtojson() {
+   # if [[ ${debug:-0} == 1 ]] ; then return ; fi
+   _p=$(echo ${1% } | tr ':' ' ')
+   _d='"'$(echo ${2# } | tr '\n' ' ')'"'
+   _k='["'$(echo ${_p# } | sed 's/ /"]["/g')'"]'   
+   json_content=$(echo "${json_content}" | jq ".${_k} = ${_d% }")
+}
+
+dicstr=""
+allsss=""
+allcccc=""
+allplvar=""
+allslvar=""
+alllvl=""
+allmon=""
+allmm=""
+allii=""
+
+aflist="analyses forecasts"
+
+for af in ${aflist} ; do
+   mystderr af=$af 
+   ssslist=$(getsss ${af})
+   allsss="${allsss} ${ssslist}"
+   for sss in ${ssslist} ; do
+      mystderr af=$af sss=$sss
+      sss1=$sss
+      if [[ ${af} == "analyses" ]] ; then sss1=.; fi
+      
+      cccclist=$(getcccc ${af}/${sss1})
+      allcccc="${allcccc} ${cccclist}"
+      for cccc in ${cccclist} ; do
+
+         mmlist=$(getmm ${af}/${sss1}/${cccc})
+         mystderr af=$af sss=$sss cccc=$cccc : mmlist=${mmlist}
+         allmm="${allmm} ${mmlist}"
+         for mm in ${mmlist} ; do
+            
+            iilist=$(getii ${af}/${sss1}/${cccc} ${mm})
+            mystderr af=$af sss=$sss cccc=$cccc mm=$mm iilist=${iilist}
+            allii="${allii} ${iilist}"
+            for ii in ${iilist} ; do
+
+               mmii=${mm}_${ii}
+               mmii1=${mmii}
+               if [[ ${af} == "analyses" ]] ; then mmii1=. ; fi
+               mystderr af=$af sss=$sss cccc=$cccc mm=$mm ii=$ii mmii=$mmii
+               
+               plvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} pl)
+               allplvar="${allplvar} ${plvarlist}"
+               slvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} sl)
+               allslvar="${allslvar} ${slvarlist}"
+               
+               for var in ${plvarlist} ; do
+                  lvllist=$(getlvl ${af}/${sss1}/${cccc}/${mmii1}/${var})
+                  alllvl="${alllvl} ${lvllist}"
+                  monlist=$(getmon ${af}/${sss1}/${cccc}/${mmii1}/${var})
+                  allmon="${allmon} ${monlist}"
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "${lvllist}"
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "${monlist}"
+               done
+               for var in ${slvarlist} ; do
+                  monlist=$(getmon ${af}/${sss1}/${cccc}/${mmii1}/${var})
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "surface"
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "${monlist}"
+               done
+            done
+         done
+      done
+   done
+done
+
+allsss="$(echo ${allsss}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allcccc="$(echo ${allcccc}   | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allmm="$(echo ${allmm}       | tr ' ' '\n' | sort -r -u | tr '\n' ' ')"
+allii="$(echo ${allii}       | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allplvar="$(echo ${allplvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allslvar="$(echo ${allslvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+alllvl="$(echo ${alllvl}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allmon="$(echo ${allmon}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+
+addtojson alllvltyp "surface pressure"
+addtojson allaf "${aflist}"
+addtojson allsss "${allsss}"
+addtojson allcccc "${allcccc}"
+addtojson allmm "${allmm}"
+addtojson allii "${allii}"
+addtojson allplvar "${allplvar}"
+addtojson allslvar "${allslvar}"
+addtojson alllvl "${alllvl}"
+addtojson allmon "${allmon}"
+
+# addtojson prodlist "${allsss}"
+# addtojson cntrlist "${allcccc}"
+# addtojson typelist "${allmmii}"
+
+for x in ${contribs} ${models} ${streamtype} ${lvltyp} ; do
+   addtojson  "dico:${x%:*}" "${x#*:}"
+done
+
+json_content=$(echo ${json_content} | tr '\n' ' ')
+echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}"
+
