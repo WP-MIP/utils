@@ -2,6 +2,7 @@
 import glob, os, re, sys, calendar, shutil, glob, errno
 from datetime import datetime
 from collections import defaultdict
+import earthkit as ek
 
 # Contributor name mapping
 namemap = defaultdict(dict)
@@ -67,10 +68,12 @@ exp = 'WP-MIP'
 base = os.path.join('/home/swpm001/public_html', exp)
 fbase = os.path.join(base, 'forecasts')
 html_path = '/home/swpm001/public_html'
+sptable_path = os.path.join(html_path, 'sp.tbl')
 vindex = 'vindex'
 indexdir = os.path.join(html_path, exp, vindex)
 test_pl = 't'
 test_sl = '2t'
+sp1_threshold = 1000
 model_defaults = defaultdict(dict)
 model_defaults = dict({'ai':{'link':'-', 'path':[]},
                        'hy':{'link':'-', 'path':[]},
@@ -96,10 +99,12 @@ class Contrib(dict):
             paths.extend(self._addpath(c['pl']))
             paths.extend(self._addpath(c['sl']))
         self.outstr = outstr
-        self.paths = []
+        allpaths = []
         for p in paths:
             if p:
-                self.paths.extend(p)
+                allpaths.extend(p)
+        self.paths = sorted(set(allpaths))
+        self.sptbl = self._subprojects(base)
 
     def _getContrib(self, base, stream, lev, testfld):
         if not os.path.exists(base):
@@ -172,7 +177,22 @@ class Contrib(dict):
                 paths.append(p[ty]['path'])
             except KeyError:
                 pass
-        return(paths)    
+        return(paths)
+
+    def _subprojects(self, htmlbase):
+        import pathlib
+        sptbl = {}
+        fbase = os.path.join('/', *re.split('/', htmlbase)[:-2])
+        for contrib in self.paths:
+            p = pathlib.Path(os.path.join(fbase, contrib))
+            subdirs = sorted([x for x in p.iterdir() if x.is_dir()])
+            testfile = sorted(list(subdirs[0].glob("*.grib2")))[0]
+            ds = ek.data.from_source('file', testfile)
+            sp = 'core'
+            if len(set(ds.metadata("julianDay"))) > 20: sp = ','.join([sp, 'sp1'])
+            if max(ds.metadata("step")) > 240: sp = ','.join([sp, 'sp2'])
+            sptbl[contrib] = sp
+        return(sptbl)
     
 class varPage(dict):
     """Class handling variable-centric reshaping of the archive"""
@@ -357,7 +377,7 @@ def pathIndex(paths):
             for var in vars:
                 
                 # Variable-level page showing available files
-                varpath = os.path.join(fullpath, var.name)
+                varpath = os.path.join(fullpath, var.name)                
                 if lev == 'sl':
                     files = [fn for fn in sorted(os.scandir(varpath), key=lambda file: file.name) if re.search('grib2', fn.name)]
                 else:
@@ -434,6 +454,11 @@ def pathIndex(paths):
                     line = line.replace('MODEL_TYPE', typemap[ty])
                     fdmod.write(line)
 
+def writeSpTable(tbl, oictbl, sictbl):
+    with open(tbl, "w") as fdout:
+        for (k, v) in (oictbl | sictbl).items():
+            fdout.write(' '.join([k, v, '\n']))
+                    
 def std_replace(line, title=None, prod=None, centre=None):
     global licence_text, portal_header
     if 'licence_text' not in globals():
@@ -491,6 +516,9 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_co
             line = line.replace('ANALYSES_TABLE_DATA', anl.outstr)
             fdout.write(line)
 
+# Generate the subproject table
+writeSpTable(sptable_path, oic.sptbl, sic.sptbl)
+            
 # Create model-specific index files
 pathIndex(oic.paths)
 pathIndex(sic.paths)
