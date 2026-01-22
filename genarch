@@ -4,6 +4,7 @@ arguments=$*
 eval `cclargs_lite $0 \
   -opath "${HOME}/local/hpfx/forecasts" "" "[Output path for project grib files]"\
   -no_check "0" "1" "[Do not check for a complete dataset]"\
+  -sp1 "0" "1" "[Inputs are provided under the SP1 protocol]"\
   -check_only "0" "1" "[Perform only checks for dataset completeness]"\
   -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
@@ -29,10 +30,12 @@ checkdates(){
 
     # Compile list of expected dates
     dat=${year}0101
+    dinc=3
+    if [[ ${sp1} -gt 0 ]] ; then dinc=1 ; fi
     unset dlist
     while [[ ${dat} -lt $((${year} + 1))0101 ]] ; do
 	dlist="${dlist} ${dat}"
-        dat=$(date +%Y%m%d -d "${dat} + 3 day")
+        dat=$(date +%Y%m%d -d "${dat} + ${dinc} day")
     done
 
     # Confirm that a forecast exists for each date
