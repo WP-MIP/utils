@@ -250,6 +250,12 @@ for x in ${contribs} ${models} ${streamtype} ${lvltyp} ; do
    addtojson  "dico:${x%:*}" "${x#*:}"
 done
 
+for x in $(cat ~/public_html/sp.tbl | tr ' ' ':') ; do
+   p=$(echo ${x%%:*} | tr 'A-Z' 'a-z')
+   v=$(echo ${x#*:} | tr ',' ' ' | tr ':' ' ' | tr 'A-Z' 'a-z')
+   addtojson "protocol:${p#*/}" "${v% }"
+done
+
 json_content=$(echo ${json_content} | tr '\n' ' ')
 echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}"
 
