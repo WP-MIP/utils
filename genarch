@@ -153,4 +153,4 @@ done
 wait
 
 # Update archive tables
-genindex
+if [[ ${check_only} -lt 1 ]] ; then genindex ; fi
