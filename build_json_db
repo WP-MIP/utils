@@ -257,5 +257,8 @@ for x in $(cat ~/public_html/sp.tbl | tr ' ' ':') ; do
 done
 
 json_content=$(echo ${json_content} | tr '\n' ' ')
-echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}"
+jfile0=~/public_html/content.json
+jfile1=${jfile0}-$(date '+%Y%m%d.%H%M%S')
+echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}" > ${jfile1}
+rm -f ${jfile0} && ln -sf ${jfile1} ${jfile0}
 
