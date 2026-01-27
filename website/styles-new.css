@@ -1,0 +1,276 @@
+/* --- Variables & Reset --- */
+:root {
+    --primary: #003366; /* Classic Science Blue */
+    --primary-dark: #002244;
+    --accent: #0071bc;
+    --bg: #f4f7f9;
+    --text: #333;
+    --text-light: #555;
+    --card-bg: #ffffff;
+    --border: #ddd;
+    --code-bg: #2d2d2d;
+    --code-text: #f8f8f2;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* --- Top Navigation Bar (NEW) --- */
+.top-nav {
+    color: white;
+    font-size: 0.95rem;
+    position: sticky; /* Keeps nav on top when scrolling */
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding-bottom: 2px;
+    padding-right: 2px;
+}
+
+.nav-inner {
+    background-color: var(--primary);
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 0 15px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: var(--accent);
+    color: white;
+    text-decoration: none;
+}
+
+/* Highlight the current page */
+.nav-link.active {
+    background-color: var(--primary-dark);
+    color: white;
+    box-shadow: inset 0 -3px 0 var(--accent); /* subtle bottom underline */
+}
+
+/* Pushes the info link to the far right */
+.nav-right {
+    margin-left: auto;
+    border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+/* --- Header --- */
+.site-header {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    /* Removed the border-top since we have the nav bar now */
+    padding: 1rem 0;
+    margin-top: 5px;
+}
+
+.header-inner {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo img {
+    height: 80px; 
+    width: auto;
+    display: block;
+}
+
+.site-title h1 {
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin: 0;
+}
+
+/* --- Main Content Layout --- */
+.main-content {
+    max-width: 1500px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.main-container {
+    /* max-width: 1500px; */
+    margin-top: 20px;
+    /* padding: 0 20px; */
+}
+
+/* Standard Link Styles (for content body) */
+a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+section {
+    margin-bottom: 40px;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--bg);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: var(--primary);
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+p {
+    margin-bottom: 15px;
+    color: var(--text-light);
+}
+
+/* --- Info Box --- */
+.info-box {
+    background-color: #eef4fa;
+    border-left: 4px solid var(--accent);
+    padding: 15px 20px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.info-box ul {
+    margin-left: 20px;
+    color: var(--text-light);
+}
+
+/* --- Data Entry Cards --- */
+.card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    display: block;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,51,102,0.15);
+    border-color: var(--accent);
+    text-decoration: none;
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    color: var(--primary);
+}
+
+.card p {
+    font-size: 0.9rem;
+    margin: 0;
+    color: var(--text-light);
+}
+
+/* --- Code Block --- */
+.code-block {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.note {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* --- License Section --- */
+.citation {
+    background: #f9f9f9;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    font-size: 0.9rem;
+    font-family: "Courier New", Courier, monospace;
+    color: #444;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    /* Nav adjustments for mobile */
+    .nav-inner {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 5px 15px;
+    }
+    
+    .nav-link {
+        width: 100%; /* Links stack vertically */
+        height: 40px;
+        padding: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-right {
+        margin-left: 0; /* Reset right push on mobile */
+        border-left: none;
+    }
+
+    .header-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .logo img {
+        height: 60px;
+    }
+}
+
