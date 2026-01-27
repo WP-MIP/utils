@@ -160,10 +160,10 @@
             cursor: pointer;
         }
 
-		  div.disabled label {
+        div.disabled label {
             color: var(--disabled-color);
-		  }
-		  
+        }
+        
         .checkbox-item label.disabled {
             color: var(--disabled-color);
        }
@@ -255,7 +255,7 @@
                     </label>
                 </div>
             </div>
-				
+            
             <!-- Protocol Type -->
             <div class="panel" id="panel-provider">
                 <h3>Protocol type</h3>
@@ -367,7 +367,7 @@
             af: 'analyses',
             sss: 'oic',
             lvltype: 'pl',
-				protocol: 'Core',
+            protocol: 'Core',
             
             // Selections
             sel_provider_model: new Set(), // Format: af:sss:cccc:mm
@@ -415,8 +415,8 @@
                 // Initial Render
                 updateProductType();  // Sets state af/sss
                 updateLevelType();    // Sets state lvltype
-					 updateProtocolType(); // Sets state protocol
-					 renderProtocolPanel();
+                updateProtocolType(); // Sets state protocol
+                renderProtocolPanel();
                 renderProviderPanel();
                 
             } catch (e) {
@@ -436,7 +436,7 @@
                 state.sel_vars.clear();
                 state.sel_levels.clear();
                 state.sel_months.clear();
-					 updateProtocolType();
+                updateProtocolType();
                 renderProviderPanel();
                 renderVersionPanel();
                 renderVariablesPanel();
@@ -475,20 +475,20 @@
                 state.sss = 'sic';
             }
         }
-		
+      
        function updateProtocolType() {
-           const prodDiv = document.getElementById('protocol-type');			 
-			  if (state.af === 'analyses') {
-					state.protocol = 'Core';
-			  } else {
-					state.protocol = document.querySelector('input[name="protocol_type"]:checked').value;
-			  }
+           const prodDiv = document.getElementById('protocol-type');          
+           if (state.af === 'analyses') {
+               state.protocol = 'Core';
+           } else {
+               state.protocol = document.querySelector('input[name="protocol_type"]:checked').value;
+           }
            state.sel_provider_model.clear();
            state.sel_version.clear();
            state.sel_vars.clear();
            state.sel_levels.clear();
            state.sel_months.clear();
- 			  renderProtocolPanel();
+            renderProtocolPanel();
            renderProviderPanel();
            renderVersionPanel();
            renderVariablesPanel();
@@ -541,16 +541,16 @@ isValid = true;
                 }
             }
 
-			   //check protocol
-			  if (isValid && state.protocol !== 'Core') {
-					isValid = false;
-				   const k = af+'/'+sss+'/'+cccc+'/'+mm+'_'+ii;
-					if (jsonData['protocol'] && jsonData['protocol'][k]) {
-						 const l = cleanSplit(jsonData.protocol[k]);
-						 isValid = l.includes(state.protocol.toLowerCase());
-					}
-			   }
-			 
+            //check protocol
+           if (isValid && state.protocol !== 'Core') {
+               isValid = false;
+               const k = af+'/'+sss+'/'+cccc+'/'+mm+'_'+ii;
+               if (jsonData['protocol'] && jsonData['protocol'][k]) {
+                   const l = cleanSplit(jsonData.protocol[k]);
+                   isValid = l.includes(state.protocol.toLowerCase());
+               }
+            }
+          
             return isValid;
         }
 
@@ -561,26 +561,26 @@ isValid = true;
         }
 
         function renderProtocolPanel() {
-				const proto_types = ["Core", "SP1", "SP2"];
-				const proto_href = {
-					 "Core": "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.qggl5jknjrf5",
-					 "SP1" : "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.8z5nrqdkx6lp",
-					 "SP2" : "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.n4cqlzp1y04s"
-				};
+            const proto_types = ["Core", "SP1", "SP2"];
+            const proto_href = {
+                "Core": "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.qggl5jknjrf5",
+                "SP1" : "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.8z5nrqdkx6lp",
+                "SP2" : "https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.n4cqlzp1y04s"
+            };
             const container = document.getElementById('protocol-content');
-				let html = '';
+            let html = '';
 
-				const isEnabled = (state.af !== 'analyses');
+            const isEnabled = (state.af !== 'analyses');
             const disabledAttr = isEnabled ? '' : 'disabled';
-				if (!isEnabled) state.protocol = 'Core';
-				proto_types.forEach((pt, index) => {
+            if (!isEnabled) state.protocol = 'Core';
+            proto_types.forEach((pt, index) => {
                 const checkedAttr = (state.protocol === pt) ? 'checked' : '';
-					 const pt_href = proto_href[pt];
-					 html += `<label>
+                const pt_href = proto_href[pt];
+                html += `<label>
                          <input type="radio" name="protocol_type" value="${pt}" ${disabledAttr} ${checkedAttr} onchange="updateProtocolType()">
                          <a href="${pt_href}" target="_blank" class="${disabledAttr}">${pt}</a>
                          </label>`;
-				});
+            });
             container.innerHTML = html;
         }
 
@@ -639,7 +639,7 @@ isValid = true;
 
             if (state.sel_provider_model.size === 0) {
                 container.innerHTML = '<div class="info-text">Select a provider above</div>';
- 					 verPanel.style.display = 'none';
+                 verPanel.style.display = 'none';
                 renderVariablesPanel();
                 return;
             }
@@ -685,7 +685,7 @@ isValid = true;
                              // Default checked
                              // html += `<input type="checkbox" value="${val}" ${rdstatus} onchange="onVersionSelect()"> ${ii}`;
                              html += `<input type="radio" name="${rowVal}_bt" value="${val}" ${rdstatus} onchange="onVersionSelect()"> ${ii}`;
-									 if (rdstatus != "") state.sel_version.add(val);
+                            if (rdstatus != "") state.sel_version.add(val);
                             rdstatus = "";
                         }
                         html += '</td>';
@@ -699,11 +699,11 @@ isValid = true;
             if (visibleRowCount === 0) {
                 container.innerHTML = '<div class="info-text">Automatic version selection applied.</div>';
                 container.style.display = 'hidden';
-					 verPanel.style.display = 'none';
+                verPanel.style.display = 'none';
             } else {
                 container.innerHTML = html;
                 container.style.display = 'block';
-					 verPanel.style.display = 'block';
+                verPanel.style.display = 'block';
             }
 
             renderVariablesPanel();
@@ -1023,66 +1023,55 @@ isValid = true;
             }
 
             let pathList = [];
-				// let vpathList = [];
-				let nfiles = 0;
-				
+            // let vpathList = [];
+            let nfiles = 0;
+            
             for (let ver of state.sel_version) {
-					 const p = ver.split(':'); 
-					 const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+                const p = ver.split(':'); 
+                const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
                 for (let v of state.sel_vars) {
-						  if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
-						  const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
-						  const selMonthList = (state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
-						  const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
-						  const selLevelList = (state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+                    if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
+                    const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
+                    const selMonthList = (state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
+                    const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
+                    const selLevelList = (state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
 
                     for (let l of selLevelList) {
                         for (let m of selMonthList) {
                             if (entryValidation(ver, v, l, m)) {
                                 const fname = filenameCreation(ver, v, l, m);
                                 // const pDir = pathCreation(ver, v);
-										  // pathList.push(`/${pDir}/${fname}`);
-										  pathList.push(`${fname}`);
+                                // pathList.push(`/${pDir}/${fname}`);
+                                pathList.push(`${fname}`);
                             }
                         }
                     }
                     for (let l of state.sel_levels) {
-								for (let m of state.sel_months) {
+                        for (let m of state.sel_months) {
                             if (entryValidation(ver, v, l, m)) nfiles++;
-								}
-                        // for (let m of selMonthList) {
-                        //     if (entryValidation(ver, v, l, m)) {
-                        //         const fname = filenameCreation(ver, v, l, m);
-                        //         const vpDir = vpathCreation(v, l);
-                        //         vpathList.push(`/${vpDir}/${fname}`);
-                        //     }
-                        // }
+                        }
                     }
                 }
             }
 
-				// wget -e robots=off -nd -r --no-parent -A http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/{forecasts,analyses}
-				// if (pathList.length <= vpathList.length) {
-				// 	 pathsArea.value = pathList.join('\n');
-				// 	 pathCount.innerText = `(${pathList.length} items ; ${nfiles} files)`;
-				// } else {
-				//	   pathsArea.value = vpathList.join('\n');
-				//	   pathCount.innerText = `(${vpathList.length} items ; ${nfiles} files)`;
-				// }
-            
-            // vpathsArea.value = vpathList.join('\n');
-            // vpathCount.innerText = `(${vpathList.length} items)`;
-
-				const wgetcmdbase = 'wget -e robots=off -r --no-parent -A';
-				const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+state.af;
-				const chunkSize = 20;
-				let wgetcmd = '';
-				for (let i = 0; i < pathList.length; i += chunkSize) {
-					 const chunk = pathList.slice(i, i + chunkSize);
-					 wgetcmd += wgetcmdbase + ' \\\n\t"' + chunk.join(', \\\n\t') + '" \\\n\t' + urlbase + '\n';
-				}
-				pathCount.innerText = `(${pathList.length} items ; ${nfiles} files)`;
-				pathsArea.value = wgetcmd;
+            const wgetcmdbase = 'wget -e robots=off -r --no-parent -A';
+            const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+state.af;
+            let wgetcmd = '';
+            const outerSize = 30;
+            const innerSize = 5;
+            for (let i = 0; i < pathList.length; i += outerSize) {
+                const bigChunk = pathList.slice(i, i + outerSize);
+                wgetcmd += wgetcmdbase + ' "\\\n';
+                for (let j = 0; j < bigChunk.length; j += innerSize) {
+                    const smallChunk = bigChunk.slice(j, j + innerSize);
+                    wgetcmd += smallChunk.join(',');
+                    if (j < bigChunk.length-1) wgetcmd += ',';
+                    wgetcmd += '\\\n';
+                }
+                wgetcmd += '" ' + urlbase + '\n\n';
+            }
+            pathCount.innerText = `(${pathList.length} patterns ; ${nfiles} files)`;
+            pathsArea.value = wgetcmd;
         }
 
     </script>
