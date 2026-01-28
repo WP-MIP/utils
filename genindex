@@ -18,6 +18,7 @@ namemap = dict({'cwao':{'name':'ECCC', 'long':'ECCC'},
                 'rjtd':{'name':'JMA', 'long':'JMA'},
                 'egrr':{'name':'UKMO', 'long':'UKMO'},
                 'enmi':{'name':'MetNo', 'long':'MetNo'},
+                'gfdl':{'name':'GFDL', 'long':'GFDL'},
                 'rums':{'name':'RAS', 'long':'RAS'}})
 
 # Variable name mapping
