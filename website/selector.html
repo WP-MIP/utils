@@ -779,6 +779,27 @@ isValid = true;
             return false;
         }
 
+        function checkProtocol(varname, level) {
+            if (state.protocol == 'SP1') {
+               if (state.lvltype === 'sl') {
+                  const varlist = ['msl', '10u', '10v'];
+                  return varlist.includes(varname); 
+               } else {
+                  if (varname == '') {
+                     const varlist = ['850', '500' , '300'];
+                     return varlist.includes(level); 
+                  } else if (level == '') {
+                     const varlist = ['u', 'v', 'gh'];
+                     return varlist.includes(varname); 
+                  } else {
+                     const varlist = ['u:850', 'v:850', 'u:500' , 'v:500', 'gh:850', 'gh:500', 'gh:300'];
+                     return varlist.includes(varname+':'+level); 
+                  }
+               }
+            } 
+            return true;
+        }
+
         function renderVariablesPanel() {
             const container = document.getElementById('vars-content');
             const msg = document.getElementById('var-msg');
@@ -788,7 +809,7 @@ isValid = true;
 
             let html = '';
             varList.forEach(v => {
-                const isEnabled = checkTreeExistence(v);
+                const isEnabled = checkTreeExistence(v) && checkProtocol(v, '');
                 if (isEnabled) allDisabled = false;
                 
                 const disabledAttr = isEnabled ? '' : 'disabled';
@@ -852,7 +873,7 @@ isValid = true;
                 let isEnabled = false;
                 for (let v of state.sel_vars) {
                      if (checkTreeExistence(v, lvl, null)) {
-                         isEnabled = true;
+                         isEnabled = checkProtocol('', lvl);
                          break;
                      }
                 }
@@ -960,8 +981,9 @@ isValid = true;
             // Use cleanSplit here as well to avoid empty strings in checks
             const hasLvl = (lvl === '' || lvl === '*' || cleanSplit(varNode.lvllist).includes(lvl));
             const hasMon = (mon === '' || mon === '*' || cleanSplit(varNode.monlist).includes(mon));
+            const inProto = checkProtocol(varname, lvl);
 
-            return hasLvl && hasMon;
+            return hasLvl && hasMon && inProto;
         }
 
         function filenameCreation(af_sss_cccc_mm_ii, varname, lvl, mon) {
@@ -975,7 +997,7 @@ isValid = true;
                     return `${varname}_${lvl}_${cccc}_pl_${mon}.grib2`;
                 }
             } else if (af === 'forecasts') {
-                 if (lvl === 'surface') {
+                 if (state.lvltype === 'sl') {
                     return `${varname}_${sss}_${cccc}_${mm}_${ii}_sl_${mon}.grib2`;
                 } else {
                     return `${varname}_${lvl}_${sss}_${cccc}_${mm}_${ii}_pl_${mon}.grib2`;
@@ -1032,9 +1054,9 @@ isValid = true;
                 for (let v of state.sel_vars) {
                     if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
                     const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
-                    const selMonthList = (state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
+                    const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
                     const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
-                    const selLevelList = (state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+                    const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
 
                     for (let l of selLevelList) {
                         for (let m of selMonthList) {
@@ -1064,8 +1086,8 @@ isValid = true;
                 wgetcmd += wgetcmdbase + ' "\\\n';
                 for (let j = 0; j < bigChunk.length; j += innerSize) {
                     const smallChunk = bigChunk.slice(j, j + innerSize);
-                    wgetcmd += smallChunk.join(',');
-                    if (j < bigChunk.length-1) wgetcmd += ',';
+                    wgetcmd += smallChunk.filter(Boolean).join(',');
+                    if (j+smallChunk.length < bigChunk.length) wgetcmd += ',';
                     wgetcmd += '\\\n';
                 }
                 wgetcmd += '" ' + urlbase + '\n\n';

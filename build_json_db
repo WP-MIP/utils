@@ -1,3 +1,4 @@
+#!/bin/bash
 basedir=~/public_html/WP-MIP
 dbanal=analyses
 dbfcst=forecasts
