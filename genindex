@@ -72,8 +72,8 @@ html_path = '/home/swpm001/public_html'
 sptable_path = os.path.join(html_path, 'sp.tbl')
 vindex = 'vindex'
 indexdir = os.path.join(html_path, exp, vindex)
-test_pl = 't'
-test_sl = 'msl'
+test_pl = ['t']
+test_sl = ['2t', 'msl']
 sp1_threshold = 1000
 model_defaults = defaultdict(dict)
 model_defaults = dict({'ai':{'link':'-', 'path':[]},
@@ -107,16 +107,23 @@ class Contrib(dict):
         self.paths = sorted(set(allpaths))
         self.sptbl = self._subprojects(base)
 
+    def _getDirs(self, base, wild, testfld):
+        dirsall = [glob.glob(os.path.join(base, wild, fld), recursive=True) for fld in testfld]
+        dlist = []
+        for dirs in dirsall:
+            dlist.extend([os.path.dirname(d) for d in dirs])
+        return(set(dlist))
+        
     def _getContrib(self, base, stream, lev, testfld):
         if not os.path.exists(base):
             sys.stderr.write('Cannot find '+base+'.  Run this application from the hpfx server.\n')
             sys.exit(1)
         if stream is None:
-            dirs = glob.glob(os.path.join(base, '*', testfld), recursive=True)
+            dirs = self._getDirs(base, '*', testfld)
             contrib = {}
             for dir in dirs:
                 path = re.split('/', dir)
-                centre = path[-2]
+                centre = path[-1]
                 path = os.path.join(exp, os.path.basename(base), centre)
                 linkpath = os.path.join(path, 'index_'+lev+'.html')
                 if centre not in contrib.keys():
@@ -125,12 +132,12 @@ class Contrib(dict):
             for centre in contrib.keys():
                 contrib[centre] = dict(contrib[centre])
         else:
-            dirs = glob.glob(os.path.join(base, stream, '*/*', testfld), recursive=True)
+            dirs = self._getDirs(os.path.join(base, stream), '*/*', testfld)
             contrib = {}
             for dir in dirs:
                 path = re.split('/', dir)
-                (ty, ver) = re.split('_', path[-2])
-                centre = path[-3]
+                (ty, ver) = re.split('_', path[-1])
+                centre = path[-2]
                 path = os.path.join(exp, os.path.basename(base), stream, centre, ty+'_'+ver)
                 linkpath = os.path.join(path, 'index_'+lev+'.html')
                 if centre not in contrib.keys():
