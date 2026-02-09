@@ -1022,14 +1022,22 @@ isValid = true;
             return "";
         }
 
-        function pathCreation(af_sss_cccc_mm_ii, varname) {
+        function pathCreation(af_sss_cccc_mm_ii, varname='', short=false) {
             const p = af_sss_cccc_mm_ii.split(':'); 
             const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
 
             if (af === 'analyses') {
-                return `${af}/${cccc}/${varname}`;
+                if (short) {
+                   return `${af}/${cccc}/`;
+                } else { 
+                   return `${af}/${cccc}/${varname}`;
+                }
             } else if (af === 'forecasts') {
-                return `${af}/${sss}/${cccc}/${mm}_${ii}/${varname}`;
+                if (short) {
+                   return `${af}/${sss}/${cccc}/`;
+                } else { 
+                   return `${af}/${sss}/${cccc}/${mm}_${ii}/${varname}`;
+                }
             }
             return "";
         }
@@ -1060,11 +1068,14 @@ isValid = true;
                     return;
             }
 
-            let pathList = [];
+            // let pathList = [];
+            let pathDict = {};
             // let vpathList = [];
             let nfiles = 0;
-            
+            let npatterns = 0;
+            // let shortPath = '';
             for (let ver of state.sel_version) {
+                // if (shortPath === '') shortPath = pathCreation(ver, '', true); 
                 const p = ver.split(':'); 
                 const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
                 for (let v of state.sel_vars) {
@@ -1078,9 +1089,13 @@ isValid = true;
                         for (let m of selMonthList) {
                             if (entryValidation(ver, v, l, m)) {
                                 const fname = filenameCreation(ver, v, l, m);
-                                // const pDir = pathCreation(ver, v);
+                                const pDir = pathCreation(ver);
                                 // pathList.push(`/${pDir}/${fname}`);
-                                pathList.push(`${fname}`);
+                                // pathList.push(`${fname}`);
+                                pathDict[pDir] ??= [];
+                                pathDict[pDir].push(`${fname}`);
+                                npatterns++;
+                                // pathList.push(`${fname}`);
                             }
                         }
                     }
@@ -1092,11 +1107,14 @@ isValid = true;
                 }
             }
 
-            const wgetcmdbase = 'wget -e robots=off -r --no-parent -A';
-            const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+state.af;
+            const wgetcmdbase = 'wget -e robots=off -nd -r --no-parent --no-verbose --show-progress --rejected-log=/dev/null -A';
+            // const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+shortPath;
             let wgetcmd = '';
             const outerSize = 30;
             const innerSize = 5;
+            
+            for (const [pDir, pathList] of Object.entries(pathDict)) {
+            const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+pDir;
             for (let i = 0; i < pathList.length; i += outerSize) {
                 const bigChunk = pathList.slice(i, i + outerSize);
                 wgetcmd += wgetcmdbase + ' "\\\n';
@@ -1108,7 +1126,9 @@ isValid = true;
                 }
                 wgetcmd += '" ' + urlbase + '\n\n';
             }
-            pathCount.innerText = `(${pathList.length} patterns ; ${nfiles} files)`;
+            }
+            //pathCount.innerText = `(${pathList.length} patterns ; ${nfiles} files)`;
+            pathCount.innerText = `(${npatterns} patterns ; ${nfiles} files)`;
             pathsArea.value = wgetcmd;
         }
 
