@@ -39,7 +39,7 @@ body {
 
 .nav-inner {
     background-color: var(--primary);
-    max-width: 1500px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 0 20px;
     display: flex;
@@ -87,7 +87,7 @@ body {
 }
 
 .header-inner {
-    max-width: 1500px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 0 20px;
     display: flex;
@@ -109,13 +109,13 @@ body {
 
 /* --- Main Content Layout --- */
 .main-content {
-    max-width: 1500px;
+    max-width: 1300px;
     margin: 40px auto;
     padding: 0 20px;
 }
 
 .main-container {
-    /* max-width: 1500px; */
+    /* max-width: 1300px; */
     margin-top: 20px;
     /* padding: 0 20px; */
 }

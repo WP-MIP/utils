@@ -126,6 +126,7 @@
             border: 1px solid var(--border-color);
             padding: 8px;
             text-align: center;
+            min-width: 5em;
         }
         th {
             background-color: var(--light-gray);
@@ -590,7 +591,7 @@ isValid = true;
             
             // Header: MM
             jsonData.arr_mm.forEach(mm => {
-                html += `<th>${getLabel(mm)}</th>`;
+                html += `<th style="text-align: center;">${getLabel(mm)}</th>`;
             });
             html += '</tr></thead><tbody>';
 
@@ -906,7 +907,21 @@ isValid = true;
         function renderMonthsPanel() {
             const container = document.getElementById('months-content');
             const msg = document.getElementById('mon-msg');
-            
+            const monLabelDict = {
+              "01": "January",
+              "02": "February",
+              "03": "March",
+              "04": "April",
+              "05": "May",
+              "06": "June",
+              "07": "July",
+              "08": "August",
+              "09": "September",
+              "10": "October",
+              "11": "November",
+              "12": "December",
+              "13": "January2025"
+            }
             let allDisabled = true;
             let html = '';
 
@@ -924,9 +939,10 @@ isValid = true;
                 if (!isEnabled && state.sel_months.has(mon)) state.sel_months.delete(mon);
                 const checkedAttr = (isEnabled && state.sel_months.has(mon)) ? 'checked' : '';
 
+                const monLabel = monLabelDict[mon];
                 html += `<div class="checkbox-item" id="div_mon_${mon}">
                             <input type="checkbox" value="${mon}" ${disabledAttr} ${checkedAttr} onchange="onMonSelect()">
-                            <label class="${disabledAttr}">${mon}</label>
+                            <label class="${disabledAttr}">${mon} - ${monLabel}</label>
                          </div>`;
             });
 
