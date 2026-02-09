@@ -6,7 +6,7 @@ dbfcst=forecasts
 streams="${dbanal} ${dbfcst}/*"
 
 streamtype="oic:Other_Initial_Conditions sic:Self_Initial_Conditions"
-contribs="cwao:ECCC ecmf:ECMWF kwbc:NOAAN rksl:KMA/KIAPS ammc:BoM babj:CMAC sbsj:CPTEC/INPEC edzw:DWD vabb:IMD rjtd:JMA egrr:UKMO enmi:MetNo rums:RAS"
+contribs="cwao:ECCC ecmf:ECMWF kwbc:NOAA rksl:KMA/KIAPS ammc:BoM babj:CMA sbsj:CPTEC/INPE edzw:DWD vabb:IMD rjtd:JMA egrr:UKMO enmi:MetNo gfdl:GFDL rums:RAS"
 models="ai:AI hy:Hybrid pm:Physical"
 lvltyp="pl:Pressure-Level sl:Single-Level"
 varnames="'vardict':{
