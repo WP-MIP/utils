@@ -79,6 +79,7 @@ model_defaults = defaultdict(dict)
 model_defaults = dict({'ai':{'link':'-', 'path':[]},
                        'hy':{'link':'-', 'path':[]},
                        'pm':{'link':'-', 'path':[]}})
+analysis_defaults = dict({'pm':{'link':'-', 'path':[]}})
 
 
 class Contrib(dict):
@@ -87,7 +88,7 @@ class Contrib(dict):
     def __init__(self, base, stream):
         contrib_pl = self._getContrib(base, stream, 'pl', test_pl)
         contrib_sl = self._getContrib(base, stream, 'sl', test_sl)    
-        contrib = self._joinContrib(contrib_pl, contrib_sl)    
+        contrib = self._joinContrib(contrib_pl, contrib_sl, stream)
         outstr = ''
         paths = []
         for centre in sorted(contrib.keys()):
@@ -155,17 +156,18 @@ class Contrib(dict):
                 contrib[centre] = dict(contrib[centre])
         return(dict(contrib))
 
-    def _joinContrib(self, cpl, csl):
+    def _joinContrib(self, cpl, csl, stream):
+        defaults = analysis_defaults if stream == None else model_defaults
         contrib = {}
         for centre in set(list(cpl.keys()) + list(csl.keys())):
             try:
                 pl = cpl[centre]
             except KeyError:
-                pl = model_defaults
+                pl = defaults
             try:
                 sl = csl[centre]
             except KeyError:
-                sl = model_defaults
+                sl = defaults
             contrib[centre] = {'pl':pl, 'sl':sl}
         return(contrib)
 
