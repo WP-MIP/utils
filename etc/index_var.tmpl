@@ -1,16 +1,56 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WP-MIP Data Portal</title>
-    <link rel="stylesheet" href="https://hpfx.collab.science.gc.ca/~swpm001/styles2.css">
-  </head>
-  <body>
+    <link rel="stylesheet" href="styles-new.css">
+    <style>
+        .table-style-one table { width: 100%; border-collapse: collapse; /* Essential
+            for border-bottom on tr or td */ }
+        .table-style-one th, td { padding: 8px; text-align: left; border-bottom: 1px
+            solid #ddd; /* Default bottom border for cells */ }
+        .table-style-one tr:hover { background-color: #f5f5f5; /* Optional: highlight
+            row on hover */ }
+        .table-style-one tr:hover td { border-bottom: 2px solid blue; /* Thicker, blue
+            bottom border on hover */ }
+    </style>
+</head>
+<body>
     EDIT_WARNING
 
-    PORTAL_HEADER
-    
-    TITLE
-    <br>
+    <main class="main-content">
+
+        <!-- NEW NAVIGATION BAR -->
+    <nav class="top-nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-link">Home</a>
+            <!-- Grouping the data links for clarity, though they work individually too -->
+            <a href="selector.html" class="nav-link">Data Selector</a>
+            <a href="index_contrib.html" class="nav-link">Browse by Contributor</a>
+            <a href="index_byvar.html" class="nav-link active">Browse by Field</a>
+
+            <!-- This link moves to the far right via CSS -->
+            <a href="https://www.wcrp-esmo.org/activities/wp-mip" class="nav-link nav-right">WP-MIP Info Page ↗</a>
+        </div>
+    </nav>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="https://hpfx.collab.science.gc.ca/~swpm001/wpmip_logo-2.png" alt="WP-MIP Logo">
+                </a>
+            </div>
+            <div class="site-title">
+                <!-- <h1>WP-MIP Forecast and Analysis Variables</h1> -->
+                TITLE
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-container">
+
     <p>This section of the <a href="https://hpfx.collab.science.gc.ca/~swpm001">WP-MIP forecast portal</a> contains PRODLOWER of VARLONG generated the CENTRENAME MODEL_TYPE
       model.  More information about this system can be found in the <a href="https://github.com/WP-MIP/utils/wiki/CENTRELONG-Model-Descriptions">model description</a>.</p>
 
@@ -45,5 +85,9 @@
       </tr>
       TABLE_DATA
     </table>
+
+    </div>
+    </main>
+
   </body>
 </html>
