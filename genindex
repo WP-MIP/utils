@@ -3,6 +3,20 @@ import glob, os, re, sys, calendar, shutil, glob, errno
 from datetime import datetime
 from collections import defaultdict
 import earthkit as ek
+import argparse
+
+# Command line arguments
+desc="Generate WP-MIP data portal and related content index DB"
+usage = """
+%(prog)s [options]"""
+epilog=""
+parser = argparse.ArgumentParser(
+    description=desc, usage=usage, epilog=epilog,
+    formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument("-n", "--no-json", dest="nojson", 
+                    action="store_true", 
+                    help="Prevent JSON DB production")
+args = parser.parse_args()
 
 # Contributor name mapping
 namemap = defaultdict(dict)
@@ -557,4 +571,9 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'etc/index_by
             line = line.replace('ANLSL_TABLE_DATA', varTable(vlist, 'analyses', 'sl'))
             fdout.write(line)
 
-
+# Produce the json DB file for the data selector
+if not args.nojson:
+    import os
+    build_json_db_path = '/home/swpm001/local/internal/installed/bin/build_json_db'
+    print('Producing the json DB file for the data selector')
+    os.system(build_json_db_path)
