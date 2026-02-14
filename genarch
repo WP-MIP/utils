@@ -78,11 +78,11 @@ gribmonth(){
     filt=${workdir}/rules.filter
     steplist='step=0'
     for step in $(seq 6 6 240); do
-	steplist="${steplist} || step=${step}"
+	steplist="${steplist} || step==${step}"
     done
     if [[ ${sp2} -gt 0 ]] ; then
 	for step in $(seq 268 24 360); do
-	    steplist="${steplist} || step=${step}"
+	    steplist="${steplist} || step==${step}"
 	done
     fi
     if [[ ${ll} == sl ]] ; then
