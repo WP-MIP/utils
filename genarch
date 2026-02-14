@@ -5,6 +5,7 @@ eval `cclargs_lite $0 \
   -opath "${HOME}/local/hpfx/forecasts" "" "[Output path for project grib files]"\
   -no_check "0" "1" "[Do not check for a complete dataset]"\
   -sp1 "0" "1" "[Inputs are provided under the SP1 protocol]"\
+  -sp2 "0" "1" "[Inputs are provided under the SP2 protocol]"\
   -check_only "0" "1" "[Perform only checks for dataset completeness]"\
   -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
@@ -75,15 +76,21 @@ gribmonth(){
 
     # Create an appropriate filtering file
     filt=${workdir}/rules.filter
-    if [[ ${ll} == sl ]] ; then
-	cat > ${filt} <<EOF
-write "${workdir}/[shortName]_[date].grib[editionNumber]";
-EOF
-    else
-	cat > ${filt} <<EOF
-write "${workdir}/[shortName]_[level]_[date].grib[editionNumber]";
-EOF
+    steplist='step=0'
+    for step in $(seq 6 6 240); do
+	steplist="${steplist} || step=${step}"
+    done
+    if [[ ${sp2} -gt 0 ]] ; then
+	for step in $(seq 268 24 360); do
+	    steplist="${steplist} || step=${step}"
+	done
     fi
+    if [[ ${ll} == sl ]] ; then
+	cmd="write \"${workdir}/[shortName]_[date].grib[editionNumber]\";"
+    else
+	cmd="write \"${workdir}/[shortName]_[level]_[date].grib[editionNumber]\";"
+    fi
+    echo "if (${steplist}){${cmd}}" >${filt}
 
     # Process initializations into separate files
     for fcst in ${fcstlist} ; do
