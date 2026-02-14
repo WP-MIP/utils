@@ -76,7 +76,7 @@ gribmonth(){
 
     # Create an appropriate filtering file
     filt=${workdir}/rules.filter
-    steplist='step=0'
+    steplist='step==0'
     for step in $(seq 6 6 240); do
 	steplist="${steplist} || step==${step}"
     done
