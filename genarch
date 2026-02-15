@@ -7,6 +7,7 @@ eval `cclargs_lite $0 \
   -sp1 "0" "1" "[Inputs are provided under the SP1 protocol]"\
   -sp2 "0" "1" "[Inputs are provided under the SP2 protocol]"\
   -check_only "0" "1" "[Perform only checks for dataset completeness]"\
+  -no_index "0" "1" "[Supporess index generation]"\
   -v "0" "1" "[Verbose mode]"\
     ++ $arguments`
 if [[ $# -lt 1 ]] ; then
@@ -62,7 +63,7 @@ gribmonth(){
     nn=${1}
 
     # Identify candidate files for filtering
-    fcstlist=$(find $(dirname ${infile}) -type f -name "${proj}_${sss}_${cccc}_${year}${nn}*_${mm}_${ii}_${ll}.grib*")
+    fcstlist=$(ls -1 $(dirname ${infile})/${proj}_${sss}_${cccc}_${year}${nn}*_${mm}_${ii}_${ll}.grib*)
     if [[ -z "${fcstlist}" ]] ; then
 	echo "No file found for month ${nn} ... skipping" 1>&2
 	return
@@ -160,4 +161,4 @@ done
 wait
 
 # Update archive tables
-if [[ ${check_only} -lt 1 ]] ; then genindex ; fi
+if [[ ${check_only} -lt 1 && ${no_index} -lt 1 ]] ; then genindex ; fi
