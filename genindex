@@ -263,8 +263,12 @@ class varPage(dict):
         prefix = '<h1>WP-MIP'
         if self["levty"] == 'pl':
             prefix += ' '+str(self["lev"])+' hPa'
-        titlestr = ' '.join([prefix,varmap[self["levty"]][self["varname"]]['long'], \
-                           self["prod"].capitalize()])
+        try:
+            titlestr = ' '.join([prefix,varmap[self["levty"]][self["varname"]]['long'], \
+                                 self["prod"].capitalize()])
+        except KeyError:
+            sys.stderr.write("WARNING: Key not found in dictionnary for "+self.pagePath()+"\n")
+            return
         titlestr += '</h1>'
         filestr = self._fntemplate()
         eginfo = self._fileInfo(self["flist"][0])
@@ -408,13 +412,23 @@ def pathIndex(paths):
                     flist = []
                     for file in [fn for fn in os.scandir(varpath) if re.search('grib2', fn.name)]:
                         fsplit = re.split('_', file.name)
-                        icode = int(fsplit[1])*100 + int(re.split('\.', fsplit[-1])[0])
+                        try:
+                            icode = int(fsplit[1])*100 + int(re.split('\.', fsplit[-1])[0])
+                        except ValueError:
+                            sys.stderr.write("FATAL: Cannot correctly parse file name: "+file.name+"\n")
+                            raise
+                            sys.exit(1)
                         flist.append({'file':file, 'code':icode})
                     files = [fn['file'] for fn in sorted(flist, key=lambda file: file['code'])]
                 fline = ''
                 for fn in files:
                     fsplit = re.split('_', fn.name)
-                    mon = int(re.split('\.', fsplit[-1])[0])
+                    try:
+                        mon = int(re.split('\.', fsplit[-1])[0])
+                    except ValueError:
+                        sys.stderr.write("FATAL: Cannot correctly parse file name: "+fn.name+"\n")
+                        raise
+                        sys.exit(1)
                     year = 2024
                     while mon > 12:
                         year += 1

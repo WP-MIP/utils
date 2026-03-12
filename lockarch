@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+ 
+if [[ -z "$1" ]] ; then
+    echo "USAGE: $0 DIR" 1>&2
+    exit 1
+fi
+dir=${1}
+
+echo "Do you want to lock the contents of ${dir}?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) find ${1} -type f -name "*.grib2" -print0 | xargs --null chmod a-w; break;;
+        No ) exit;;
+    esac
+done
