@@ -598,7 +598,7 @@ isValid = true;
 
         function renderProviderPanel() {
             const container = document.getElementById('provider-content');
-            let html = '<table id="provider_table"><thead><tr><th>Provider \\ Model</th>';
+            let html = '<table id="provider_table"><thead><tr><th>Provider / Model</th>';
             
             // Header: MM
             jsonData.arr_mm.forEach(mm => {
@@ -656,7 +656,7 @@ isValid = true;
                 return;
             }
 
-            let html = '<table id="version_table"><thead><tr><th>Provider-Model \\ Version</th>';
+            let html = '<table id="version_table"><thead><tr><th>Provider-Model / Version</th>';
             jsonData.arr_ii.forEach(ii => {
                 // html += `<th>${getLabel(ii)}</th>`;
                 html += `<th></th>`;
