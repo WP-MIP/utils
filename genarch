@@ -82,7 +82,7 @@ gribmonth(){
 	steplist="${steplist} || step==${step}"
     done
     if [[ ${sp2} -gt 0 ]] ; then
-	for step in $(seq 268 24 360); do
+	for step in $(seq 264 24 360); do
 	    steplist="${steplist} || step==${step}"
 	done
     fi
