@@ -44,7 +44,7 @@ checkdates(){
     missing_files=0
     for dat in ${dlist} ; do
 	fbase="${proj}_${sss}_${cccc}_${dat}00_${mm}_${ii}_${ll}"
-	if [[ $(find $(dirname ${infile}) -type f -name "${fbase}.grib*" | wc -l) -lt 1 ]] ; then
+	if [[ $(find -L $(dirname ${infile}) -type f -name "${fbase}.grib*" | wc -l) -lt 1 ]] ; then
 	    echo "Missing initialization ${fbase}" 1>&2
 	    missing_files=$((${missing_files} + 1))
 	fi
