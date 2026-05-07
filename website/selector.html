@@ -792,23 +792,23 @@ isValid = true;
         }
 
         function checkProtocol(varname, level) {
-//            if (state.protocol == 'SP1') {
-//               if (state.lvltype === 'sl') {
-//                  const varlist = ['msl', '10u', '10v'];
-//                  return varlist.includes(varname); 
-//               } else {
-//                  if (varname == '') {
-//                     const varlist = ['850', '500' , '300'];
-//                     return varlist.includes(level); 
-//                  } else if (level == '') {
-//                     const varlist = ['u', 'v', 'gh'];
-//                     return varlist.includes(varname); 
-//                  } else {
-//                     const varlist = ['u:850', 'v:850', 'u:500' , 'v:500', 'gh:850', 'gh:500', 'gh:300'];
-//                     return varlist.includes(varname+':'+level); 
-//                  }
-//               }
-//            } 
+            if (state.protocol == 'SP1') {
+               if (state.lvltype === 'sl') {
+                  const varlist = ['msl', '10u', '10v'];
+                  return varlist.includes(varname); 
+               } else {
+                  if (varname == '') {
+                     const varlist = ['850', '500' , '300'];
+                     return varlist.includes(level); 
+                  } else if (level == '') {
+                     const varlist = ['u', 'v', 'gh'];
+                     return varlist.includes(varname); 
+                  } else {
+                     const varlist = ['u:850', 'v:850', 'u:500' , 'v:500', 'gh:850', 'gh:500', 'gh:300'];
+                     return varlist.includes(varname+':'+level); 
+                  }
+               }
+            } 
             return true;
         }
 
