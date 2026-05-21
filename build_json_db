@@ -262,5 +262,6 @@ jfile0=~/public_html/content.json
 jfile1=${jfile0}-$(date '+%Y%m%d.%H%M%S')
 echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}" > ${jfile1}
 rm -f ${jfile0} && ln -sf ${jfile1} ${jfile0}
-mkdir -p archive 2>/dev/null || true
-mv $(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ') archive || true
+archive_dir=~swpm001/public_html/archive
+mkdir -p ${archive_dir} 2>/dev/null || true
+mv $(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ') ${archive_dir} || true
