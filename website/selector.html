@@ -155,6 +155,9 @@
         a.disabled {
             color: var(--disabled-color);
         }
+	label.disabled {
+            color: var(--disabled-color);
+        }
         
         .checkbox-item label {
             margin-left: 5px;
@@ -205,12 +208,13 @@
         <div class="nav-inner">
             <a href="index.html" class="nav-link">Home</a>
             <!-- Grouping the data links for clarity, though they work individually too -->
-            <a href="selector.html" class="nav-link active">Data Selector</a>
-            <a href="index_contrib.html" class="nav-link">Browse by Contributor</a>
-            <a href="index_byvar.html" class="nav-link">Browse by Field</a>
+            <a href="selector.html" class="nav-link active">Data&nbsp;Selector</a>
+            <a href="index_contrib.html" class="nav-link">Browse&nbsp;by&nbsp;Contributor</a>
+            <a href="index_byvar.html" class="nav-link">Browse&nbsp;by&nbsp;Field</a>
             
             <!-- This link moves to the far right via CSS -->
-            <a href="https://www.wcrp-esmo.org/activities/wp-mip" class="nav-link nav-right">WP-MIP Info Page ↗</a>
+	    <a href="https://github.com/WP-MIP/utils/wiki" class="nav-link nav-right">Model&nbsp;Descriptions&nbsp;🌐↗</a>
+            <a href="https://www.wcrp-esmo.org/activities/wp-mip" class="nav-link">WP-MIP&nbsp;Info&nbsp;Page&nbsp;🛈↗</a>
         </div>
     </nav>
 
@@ -367,6 +371,10 @@
                 <strong>Recommended attribution:</strong><br>
                 "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the CC-BY-4.0 license."
             </div>
+        </section>
+
+	<section class="footer-nav">
+               <strong><a href="https://github.com/orgs/WP-MIP/projects/1">Issue Reports 🪳</a></strong>
         </section>
 	      
         </div>
@@ -588,9 +596,9 @@ isValid = true;
             proto_types.forEach((pt, index) => {
                 const checkedAttr = (state.protocol === pt) ? 'checked' : '';
                 const pt_href = proto_href[pt];
-                html += `<label>
+                html += `<label class="${disabledAttr}">
                          <input type="radio" name="protocol_type" value="${pt}" ${disabledAttr} ${checkedAttr} onchange="updateProtocolType()">
-                         <a href="${pt_href}" target="_blank" class="${disabledAttr}">${pt}</a>
+                         ${pt}&nbsp;<a href="${pt_href}" target="_blank" class="${disabledAttr}" title="Details" alt="(Details)">🗗🡕</a>
                          </label>`;
             });
             container.innerHTML = html;
@@ -840,8 +848,8 @@ isValid = true;
                 }
 
                 html += `<div class="checkbox-item" id="div_var_${v}">
-                            <input type="checkbox" value="${v}" ${disabledAttr} ${checkedAttr} onchange="onVarSelect()">
-                            <label><a href="${link}" target="_blank" class="${disabledAttr}">${labelText}</a></label>
+                            <label class="${disabledAttr}"><input type="checkbox" value="${v}" ${disabledAttr} ${checkedAttr} onchange="onVarSelect()">
+                            ${labelText}&nbsp;<a href="${link}" target="_blank" class="${disabledAttr}" title="Details" alt="(Details)">🗗🡕</a></label>
                          </div>`;
             });
 
