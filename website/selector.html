@@ -960,8 +960,9 @@ isValid = true;
 
                 const monLabel = monLabelDict[mon];
                 html += `<div class="checkbox-item" id="div_mon_${mon}">
+                            <label class="${disabledAttr}">
                             <input type="checkbox" value="${mon}" ${disabledAttr} ${checkedAttr} onchange="onMonSelect()">
-                            <label class="${disabledAttr}">${mon} - ${monLabel}</label>
+                            ${mon} - ${monLabel}</label>
                          </div>`;
             });
 
