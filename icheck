@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# Check for unprocessed WP-MIP data
+ibase=/home/swpm001/incoming
+abase=/home/swpm001/local/hpfx/forecasts
+plcheck=t
+slcheck=2t
+
+checkarch(){
+    # Process candidate files
+    dcheck=${1}
+    for file in $(find ${ibase}/ -name "*${dcheck}*" -type f) ; do
+	fn=$(basename ${file})
+	stream=$(echo ${fn} | cut -d '_' -f 2)
+	centre=$(echo ${fn} | cut -d '_' -f 3)
+	mtype=$(echo ${fn} | cut -d '_' -f 5)
+	version=$(echo ${fn} | cut -d '_' -f 6)
+	ltype=$(echo ${fn} | cut -d '_' -f 7)
+	if [[ ${ltype} == pl ]] ; then
+	    vcheck=${plcheck}
+	    lev=_1000
+	else
+	    vcheck=${slcheck}
+            lev=
+	fi
+	afile=${abase}/${stream}/${centre}/${mtype}_${version}/${vcheck}/${vcheck}${lev}*01.grib2
+	if [[ $(ls -1 ${afile} 2>/dev/null | wc -l) -gt 0 ]] ; then
+	    amod=$(stat -c "%Y" ${afile})
+	    imod=$(stat -c "%Y" ${file})
+	    if [[ ${imod} -gt ${amod} ]] ; then
+		echo "Incoming ${file} is newer than ${afile}"
+	    fi
+	else
+	    echo "No archive file matches ${file}"
+	fi
+    done
+}
+
+# Check for core protocol files
+printf "\nCore Protocol Check ...\n"
+checkarch 2024010100
+printf "\nSP1 Check ...\n"
+checkarch 2024010200
