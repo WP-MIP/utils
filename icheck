@@ -15,8 +15,8 @@ checkarch(){
 	centre=$(echo ${fn} | cut -d '_' -f 3)
 	mtype=$(echo ${fn} | cut -d '_' -f 5)
 	version=$(echo ${fn} | cut -d '_' -f 6)
-	ltype=$(echo ${fn} | cut -d '_' -f 7)
-	if [[ ${ltype} == pl ]] ; then
+	ltype=$(echo ${fn} | cut -d '_' -f 7 | cut -d '.' -f 1)
+	if [[ ${ltype} =~ "pl" ]] ; then
 	    vcheck=${plcheck}
 	    lev=_1000
 	else
