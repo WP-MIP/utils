@@ -618,7 +618,11 @@ isValid = true;
             jsonData.arr_cccc.forEach(cccc => {
                 html += `<tr><td>${getLabel(cccc)}</td>`;
                 jsonData.arr_mm.forEach(mm => {
-                    const valid = validate_cccc_mm_ii(state.af, state.sss, cccc, mm, '00');
+		    let valid = false;
+		    for (const ii of jsonData.arr_ii) {
+			valid = validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii);
+			if (valid) break;
+		    }
                     html += '<td>';
                     if (valid) {
                         val = `${state.af}:${state.sss}:${cccc}:${mm}`;
