@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# Command line arguments and basic error checks
+if [[ $1 == '' ]] ; then
+   echo "USAGE: $0 VERSION_NUMBER" 1>&2
+   exit 1
+fi
+ver=$(printf "%02d" $1)
+ldir=v${ver}
+if [[ ! -d ${ldir} ]] ; then
+   echo "Cannot find local version subdir: ${ldir}" 1>&2
+   exit 1
+fi
+
+# User configuration
+prefix=/home/swpm001/local/hpfx/derived
+
+# Centre name mapping
+CMA=babj
+CPTEC=sbsj
+CMC=cwao
+ECMWF=ecmf
+GFDL=gfdl
+DWD=edzw
+JMA=rjtd
+KIAPS=rksl
+UKMO=egrr
+NCEP=kwbc
+RAS=rums
+
+# Process all files
+stream=oic
+
+set -e
+for file in $(find ${ldir} -name "*.csv") ; do
+   incentre=$(basename ${file} | awk -F '_|-|' '{print $4}')
+   centre=$(eval echo \$${incentre})
+   mtype=$(basename ${file} | awk -F '_|-|' '{print $5}' | sed 's/[A-Z]/\L&/g')
+   mver=$(basename ${file} | awk -F '_|-|' '{print $6}' | cut -d '.' -f 1)
+   oname=wgnetc_${ver}_${stream}_${centre}_${mtype}_${mver}.csv
+   odir=${prefix}/${stream}/${centre}/${mtype}_${mver}
+   mkdir -p ${odir}
+   opath=${odir}/${oname}
+   if [[ -f ${opath} ]] ; then
+      echo "Cannot overwrite existing file at ${opath}"
+      exit 1
+   fi
+   cp -v --no-clobber ${file} ${opath}
+done
