@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PREVENT CACHING: These tags force the browser to reload the page from the server -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>WP-MIP Data Portal: Data Selector</title>
+    <link rel="stylesheet" href="styles-new.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --light-gray: #f4f4f4;
+            --border-color: #ddd;
+            --disabled-color: #999;
+        }
+
+        /* body { */
+        /*     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; */
+        /*     margin: 0; */
+        /*     padding: 20px; */
+        /*     background-color: #fff; */
+        /*     color: #333; */
+        /* } */
+
+        /* --- No Script Alert --- */
+        noscript {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .noscript-msg {
+            background: #e74c3c;
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        /* --- Layout --- */
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- Panels --- */
+        .panel {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-actions a {
+            font-size: 0.8em;
+            text-decoration: none;
+            color: var(--accent);
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .panel-actions a:hover { text-decoration: underline; }
+
+        .info-text {
+            font-size: 0.85em;
+            color: var(--disabled-color);
+            font-weight: normal;
+            margin-left: 10px;
+        }
+
+        /* --- Left Column Specifics --- */
+        .radio-group label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        /* Tooltip logic */
+        .tooltip {
+            border-bottom: 1px dotted #333;
+            cursor: help;
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: center;
+            min-width: 5em;
+        }
+        th {
+            background-color: var(--light-gray);
+            text-align: left;
+        }
+        /* First column alignment */
+        td:first-child, th:first-child { text-align: left; font-weight: bold;}
+
+        /* --- Grid Checkboxes (Vars, Levels, Months) --- */
+        .checkbox-grid {
+            display: grid;
+            gap: 5px;
+        }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-item input:disabled + span {
+            color: var(--disabled-color);
+            text-decoration: line-through;
+        }
+        a.disabled {
+            color: var(--disabled-color);
+        }
+        label.disabled {
+            color: var(--disabled-color);
+        }
+        label.disabled a {
+            color: var(--disabled-color);
+        }
+        
+        .checkbox-item label {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        div.disabled label {
+            color: var(--disabled-color);
+        }
+        
+        .checkbox-item label.disabled {
+            color: var(--disabled-color);
+       }
+        .checkbox-item label .disabled {
+            color: var(--disabled-color);
+       }
+
+        /* --- Output Text Boxes --- */
+        textarea {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            resize: vertical;
+        }
+        
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .copy-btn:hover { background-color: #2980b9; }
+
+    </style>
+</head>
+<body>
+  
+    <main class="main-content">
+
+    <!-- NEW NAVIGATION BAR -->
+    <nav class="top-nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-link">Home</a>
+            <!-- Grouping the data links for clarity, though they work individually too -->
+            <a href="selector.html" class="nav-link active">Data&nbsp;Selector</a>
+            <a href="index_contrib.html" class="nav-link">Browse&nbsp;by&nbsp;Contributor</a>
+            <a href="index_byvar.html" class="nav-link">Browse&nbsp;by&nbsp;Field</a>
+            
+            <!-- This link moves to the far right via CSS -->
+            <a href="https://github.com/WP-MIP/utils/wiki" class="nav-link nav-right">Model&nbsp;Descriptions&nbsp;🌐↗</a>
+            <a href="https://www.wcrp-esmo.org/activities/wp-mip" class="nav-link">WP-MIP&nbsp;Info&nbsp;Page&nbsp;🛈↗</a>
+        </div>
+    </nav>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="https://hpfx.collab.science.gc.ca/~swpm001/wpmip_logo-2.png" alt="WP-MIP Logo">
+                </a>
+            </div>
+            <div class="site-title">
+                <h1>WP-MIP Data Portal</h1>
+            </div>
+        </div>
+    </header>
+
+
+    <noscript>
+        <div class="noscript-msg">
+            ⚠️ Alert: JavaScript is not enabled.<br>
+            This application requires JavaScript to function properly.
+        </div>
+    </noscript>
+
+    <div class="container main-container">
+        <!-- LEFT COLUMN -->
+        <div class="left-col">
+            
+            <!-- Product Type -->
+            <div class="panel">
+                <h3>Product type</h3>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="product_type" value="analyses" checked> 
+                        Analyses
+                    </label>
+                    <label>
+                        <input type="radio" name="product_type" value="forecasts"> 
+                        Forecasts 
+                    </label>
+                    <label>
+                        <input type="radio" name="product_type" value="derived"> 
+                        Derived
+                    </label>
+                </div>
+            </div>
+                        
+           <!-- Stream Type -->
+            <div class="panel" id="panel-stream">
+                <h3>Stream type</h3>
+                <div class="radio-group" id="stream-content">
+                  <label id="label-oic">
+                    <input type="radio" name="stream_type" value="oic" checked>
+                    <span class="tooltip" title="Own Initial Condition">OIC</span>
+                  </label>
+                  <label id="label-sic">
+                    <input type="radio" name="stream_type" value="sic">
+                    <span class="tooltip" title="Same (ECMWF) Initial Conditions">SIC</span>
+                  </label>
+                </div>
+            </div>
+
+            <!-- Level Type -->
+            <div class="panel">
+                <h3>Level type</h3>
+                <div class="radio-group" id="leveltype-content">
+                    <label id="label-sl">
+                        <input type="radio" name="level_type" value="sl"> 
+                        Single Level
+                    </label>
+                    <label id="label-pl">
+                        <input type="radio" name="level_type" value="pl" checked> 
+                        Pressure
+                    </label>
+                </div>
+            </div>
+
+            <!-- Protocol Type -->
+            <div class="panel" id="panel-protocol">
+                <h3>Protocol type</h3>
+                <div class="radio-group" id="protocol-content">
+                    <label>
+                    <input type="radio" name="protocol_type" value="Core" checked>
+                    Core&nbsp;
+                    <a href="https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.qggl5jknjrf5" target="_blank" title="Details" alt="(Details)">🗗🡕</a>
+                    </label>
+                    <label>
+                    <input type="radio" name="protocol_type" value="SP1">
+                    SP1&nbsp;
+                    <a href="https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.8z5nrqdkx6lp" target="_blank" title="Details" alt="(Details)">🗗🡕</a>
+                    </label>
+                    <label>
+                    <input type="radio" name="protocol_type" value="SP2">
+                    SP2&nbsp;
+                    <a href="https://docs.google.com/document/d/1d6hh2C2YXvGsqgB6mnjhCEsjjHTHLz_HHqwcyqIX-ug/edit?tab=t.0#heading=h.n4cqlzp1y04s" target="_blank" title="Details" alt="(Details)">🗗🡕</a>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-col">
+
+            <!-- Panel 1: Provider and Model Type -->
+            <div class="panel" id="panel-provider">
+                <div class="panel-actions" style="float:right">
+                    <a onclick="selectAll('provider_table', true)">Select All</a>
+                    <a onclick="selectAll('provider_table', false)">Clear</a>
+                </div>
+                <h3>Provider and Model Type</h3>
+                <div id="provider-content">Loading data...</div>
+            </div>
+
+            <!-- Panel 2: Model Version -->
+            <div class="panel" id="panel-version" style="display:none;">
+                <h3>Model Version</h3>
+                <div id="version-content"></div>
+            </div>
+
+            <!-- Panel 3: Variables -->
+            <div class="panel" id="panel-vars">
+                <div class="panel-actions" style="float:right">
+                    <a onclick="selectAll('vars-content', true)">Select All</a>
+                    <a onclick="selectAll('vars-content', false)">Clear</a>
+                </div>
+                <h3>Variables <span id="var-msg" class="info-text"></span></h3>
+                <div id="vars-content" class="checkbox-grid grid-2"></div>
+            </div>
+
+            <!-- Panel 3B: Var Version -->
+            <div class="panel" id="panel-varver" style="display:none;">
+                <h3>Variable Version</h3>
+                <div id="varver-content"></div>
+            </div>
+
+            <!-- Panel 4: Levels -->
+            <div class="panel" id="panel-levels" style="display:none;">
+                <div class="panel-actions" style="float:right">
+                    <a onclick="selectAll('levels-content', true)">Select All</a>
+                    <a onclick="selectAll('levels-content', false)">Clear</a>
+                </div>
+                <h3>Levels <span id="lvl-msg" class="info-text"></span></h3>
+                <div id="levels-content" class="checkbox-grid grid-4"></div>
+            </div>
+
+            <!-- Panel 5: Months -->
+            <div class="panel" id="panel-months">
+                <div class="panel-actions" style="float:right">
+                    <a onclick="selectAll('months-content', true)">Select All</a>
+                    <a onclick="selectAll('months-content', false)">Clear</a>
+                </div>
+                <h3>Months <span id="mon-msg" class="info-text"></span></h3>
+                <div id="months-content" class="checkbox-grid grid-4"></div>
+            </div>
+
+            <!-- Output: Paths -->
+            <div class="panel">
+                <h3>Download Command <span id="path-count" class="info-text">(0 items)</span> <button class="copy-btn" title="copy to clipboard" onclick="copyToClipboard('out-paths')">Copy</button></h3>
+                <textarea id="out-paths" readonly></textarea>
+            </div>
+
+            <!-- <\!-- Output: VPaths -\-> -->
+            <!-- <div class="panel"> -->
+            <!--     <h3>VPaths <span id="vpath-count" class="info-text">(0 items)</span> <button class="copy-btn" title="copy to clipboard" onclick="copyToClipboard('out-vpaths')">Copy</button></h3> -->
+            <!--     <textarea id="out-vpaths" readonly></textarea> -->
+            <!-- </div> -->
+
+        <section class="license">
+            <h3>Data Licensing</h3>
+            <p>Data from WP-MIP are distributed under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">Creative Commons Attribution 4.0</a> licence. This allows you to access, use, adapt, and redistribute the data for any purpose, provided attribution is given.</p>
+
+            <div class="citation">
+                <strong>Recommended attribution:</strong><br>
+                "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the CC-BY-4.0 license."
+            </div>
+        </section>
+
+        <section class="footer-nav">
+               <strong><a href="https://github.com/orgs/WP-MIP/projects/1">Issue Reports 🪳</a></strong>
+        </section>
+         
+        </div>
+    </div>
+
+    <script>
+      // --- GLOBAL STATE ---
+      let jsonData = null;
+      let state = {
+          af: 'analyses',
+          sss: 'oic',
+          lvltype: 'pl',
+          protocol: 'Core',
+          
+          // Selections
+          sel_provider_model: new Set(), // Format: af:sss:cccc:mm
+          sel_version: new Set(),        // Format: af:sss:cccc:mm:ii
+          sel_vars: new Set(),           // varnames
+          sel_varver: new Set(),         // varnames_version
+          sel_levels: new Set(),         // values
+          sel_months: new Set()          // values
+      };
+
+      // --- HELPER: Split and Purge Blanks ---
+      function cleanSplit(str) {
+          if (!str || typeof str !== 'string') return [];
+          // Split by space and filter out any resulting empty strings
+          return str.split(' ').filter(item => item.trim() !== '');
+      }
+
+      function sortNumRevert(l) {
+          l.sort((a, b) => a - b);
+          return l;
+      }
+
+      // --- INITIALIZATION ---
+      window.addEventListener('DOMContentLoaded', () => {
+          fetchData();
+          setupLeftColListeners();
+      });
+
+      async function fetchData() {
+          try {
+              // Cache busting parameter to ensure re-read
+              const url = 'content.json?t=' + new Date().getTime();
+              const response = await fetch(url);
+              if (!response.ok) throw new Error("Failed to load content.json");
+              jsonData = await response.json();
+              
+              // Helper Arrays splitting with purge logic
+              jsonData.arr_cccc = cleanSplit(jsonData.allcccc);
+              jsonData.arr_mm = cleanSplit(jsonData.allmm);
+              jsonData.arr_ii = cleanSplit(jsonData.allii);
+              jsonData.arr_jj = cleanSplit(jsonData.alljj);
+              jsonData.arr_slvar = cleanSplit(jsonData.allslvar);
+              jsonData.arr_plvar = cleanSplit(jsonData.allplvar);
+              jsonData.arr_ddvar = cleanSplit(jsonData.allddvar);
+              jsonData.arr_lvl = cleanSplit(jsonData.alllvl).sort((a, b) => b - a);
+              jsonData.arr_mon = cleanSplit(jsonData.allmon);
+
+              // Initial Render
+              updateProductType();  // Sets state af
+              updateStreamType();   // Sets state sss
+              updateLevelType();    // Sets state lvltype
+              updateProtocolType(); // Sets state protocol
+
+              renderStreamPanel();
+              renderLevelTypePanel();
+              renderProtocolPanel();
+
+              renderProviderPanel();
+              
+          } catch (e) {
+              document.querySelector('.right-col').innerHTML = `<div class="panel" style="color:red">Error: ${e.message}. Ensure content.json is present and you are running on a web server.</div>`;
+              console.error(e);
+          }
+      }
+
+      // --- LEFT COLUMN HANDLERS ---
+      function setupLeftColListeners() {
+          const productRadios = document.getElementsByName('product_type');
+          productRadios.forEach(r => r.addEventListener('change', () => {
+              updateProductType();
+              // Reset downstream
+              state.sel_provider_model.clear();
+              state.sel_version.clear();
+              state.sel_vars.clear();
+              state.sel_levels.clear();
+              state.sel_months.clear();
+              
+              updateStreamType();
+              updateLevelType();
+              updateProtocolType();
+
+              renderStreamPanel();
+              renderLevelTypePanel();
+              renderProtocolPanel();
+
+              renderProviderPanel();
+              renderVersionPanel();
+              renderVariablesPanel();
+              renderVarVerPanel();
+              renderLevelsPanel();
+              renderMonthsPanel();
+              generateOutputs();
+          }));
+
+          const streamRadios = document.getElementsByName('stream_type');
+          streamRadios.forEach(r => r.addEventListener('change', () => {
+              updateStreamType();
+              updateLevelType();
+              state.sel_provider_model.clear();
+              state.sel_version.clear();
+              state.sel_vars.clear();
+              state.sel_levels.clear(); 
+              state.sel_months.clear();
+              
+              renderProviderPanel();
+              renderVersionPanel();
+              renderVariablesPanel();
+              renderVarVerPanel();
+              renderLevelsPanel();
+              renderMonthsPanel();
+              generateOutputs();
+          }));
+
+          const levelRadios = document.getElementsByName('level_type');
+          levelRadios.forEach(r => r.addEventListener('change', () => {
+              updateLevelType();
+              state.sel_provider_model.clear();
+              state.sel_version.clear();
+              state.sel_vars.clear();
+              state.sel_levels.clear(); 
+              state.sel_months.clear();
+              
+              renderProviderPanel();
+              renderVersionPanel();
+              renderVariablesPanel();
+              renderVarVerPanel();
+              renderLevelsPanel();
+              renderMonthsPanel();
+              generateOutputs();
+          }));
+
+          const protocolRadios = document.getElementsByName('protocol_type');
+          protocolRadios.forEach(r => r.addEventListener('change', () => {
+              updateProtocolType();
+              state.sel_provider_model.clear();
+              state.sel_version.clear();
+              state.sel_vars.clear();
+              state.sel_levels.clear(); 
+              state.sel_months.clear();
+              
+              renderProviderPanel();
+              renderVersionPanel();
+              renderVariablesPanel();
+              renderVarVerPanel();
+              renderLevelsPanel();
+              renderMonthsPanel();
+              generateOutputs();
+          }));
+      }
+
+      function updateProductType() {
+          state.af = document.querySelector('input[name="product_type"]:checked').value;
+          const lvlPanel = document.getElementById('panel-levels');
+          const monPanel = document.getElementById('panel-months');
+          if (state.af === 'derived') {
+              monPanel.style.display = 'none';
+              lvlPanel.style.display = 'none';
+          } else {
+              monPanel.style.display = 'block';
+              lvlPanel.style.display = (state.lvltype === 'pl') ? 'block' : 'none';
+          }
+       }
+      
+      function updateStreamType() {
+          if (state.af != 'analyses') {
+              state.sss = document.querySelector('input[name="stream_type"]:checked').value;
+          } else {
+              state.sss = 'oic';
+          }
+      }
+      
+      function renderStreamPanel() {
+          const afStates = ["forecasts", "derived"];
+          isEnable = (afStates.includes(state.af));
+          const container = document.getElementById('stream-content');
+          const children = container.querySelectorAll('*');
+          children.forEach(element => {
+              if (element.tagName === 'LABEL') {
+                  element.className = (isEnable) ? 'none' : 'disabled'; 
+              }
+              if (element.tagName === 'INPUT') {
+                  if (isEnable) {
+                      element.removeAttribute('disabled');
+                  } else {
+                      element.setAttribute('disabled', 'true');
+                  }
+              }
+          });
+      }
+
+      function updateLevelType() {
+          if (state.af === 'derived') {
+              state.lvltype = 'pl'
+          } else {
+              try {
+                  state.lvltype = document.querySelector('input[name="level_type"]:checked').value;
+              } catch (e) {
+                   state.lvltype = 'pl'
+              }
+          }
+          const lvlPanel = document.getElementById('panel-levels');
+          if (state.lvltype === 'pl' && state.af !== 'derived') {
+              lvlPanel.style.display = 'block';
+          } else {
+              lvlPanel.style.display = 'none';
+          }
+      }
+
+      function renderLevelTypePanel() {
+          const afStates = ["analyses", "forecasts"];
+          const isAfDerived = (!afStates.includes(state.af));
+          const container = document.getElementById('leveltype-content');
+          const children = container.querySelectorAll('*');
+          children.forEach(element => {
+              if (element.tagName === 'LABEL') {
+                  // if (element.id === 'label-sl') {
+                      element.className = (isAfDerived) ? 'disabled' : 'none'; 
+                  // } else if (element.id === 'label-pl') {
+                  //     element.className = (isAfDerived) ? 'disabled' : 'none'; 
+                  // }
+              }
+              if (element.tagName === 'INPUT') {
+                  if (isAfDerived) {
+                      element.setAttribute('disabled', 'true');
+                      // element.removeAttribute('checked');
+                  } else {
+                      element.removeAttribute('disabled');
+                      if (state.lvltype == element.value) {
+                          element.setAttribute('checked', 'true');
+                      } else {
+                          element.removeAttribute('checked');
+                      }
+                  }
+              }
+          });
+          updateLevelType();
+       }
+
+      function updateProtocolType() {
+          if (state.af != 'forecasts') {
+              state.protocol = 'Core';
+          } else {
+              state.protocol = document.querySelector('input[name="protocol_type"]:checked').value;
+          }
+       }
+
+      
+      function renderProtocolPanel() {
+          const isDisabled = (state.af !== 'forecasts');
+          const container = document.getElementById('protocol-content');
+          const children = container.querySelectorAll('*');
+          children.forEach(element => {
+              if (element.tagName === 'LABEL') {
+                  element.className = (isDisabled) ? 'disabled' : 'none'; 
+              }
+              if (element.tagName === 'INPUT') {
+                  if (isDisabled) {
+                      element.setAttribute('disabled', 'true');
+                      // element.removeAttribute('checked');
+                  } else {
+                      element.removeAttribute('disabled');
+                      if (state.protocol == element.value) {
+                          element.setAttribute('checked', 'true');
+                      } else {
+                          element.removeAttribute('checked');
+                      }
+                  }
+              }
+          });
+      }
+
+      // --- VALIDATION FUNCTIONS ---
+
+      function validate_cccc_mm_ii(af, sss, cccc, mm, ii) {
+          // Check existence of path up to ii
+          if (!jsonData.data[af] || 
+              !jsonData.data[af][sss] || 
+              !jsonData.data[af][sss][cccc] || 
+              !jsonData.data[af][sss][cccc][mm] || 
+              !jsonData.data[af][sss][cccc][mm][ii]) {
+              return false;
+          }
+
+          const varList1 = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
+          const varList = (state.af === 'derived') ? jsonData.arr_ddvar : varList1;
+          let isValid = false;
+
+          // Check varnames
+          for (let v of varList) {
+              const varObj = jsonData.data[af][sss][cccc][mm][ii][v];
+              if (!varObj) continue; // Var doesn't exist
+              isValid = true;
+              if (state.lvltype === 'sl') {
+                  if (varObj.lvllist.trim() === 'surface') {
+                      isValid = true;
+                      break; 
+                  }
+              } else if (state.lvltype === 'pl') {
+                  if (varObj.lvllist.trim() !== 'surface') {
+                      isValid = true;
+                      break;
+                  }
+              } else { // derived
+                  isValid = true;
+                  break;
+              }
+          }
+
+          //check protocol
+          if (isValid && state.protocol !== 'Core' && state.af === 'forecasts') {
+              isValid = false;
+              const k = af+'/'+sss+'/'+cccc+'/'+mm+'_'+ii;
+              if (jsonData['protocol'] && jsonData['protocol'][k]) {
+                  const l = cleanSplit(jsonData.protocol[k]);
+                  isValid = l.includes(state.protocol.toLowerCase());
+              }
+          }
+          
+          return isValid;
+      }
+
+      // --- RENDERERS ---
+
+      function getLabel(key, addLink=true) {
+          //return (jsonData.dico && jsonData.dico[key]) ? jsonData.dico[key] : key;
+          if (jsonData.dico && jsonData.dico[key]) {
+              const mt = ["pm", "hy", "ai"];
+              if (mt.includes(key)) {
+                  return jsonData.dico[key];
+              }
+              const name = jsonData.dico[key].replace("/","_");
+              if (addLink) {
+                  return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
+              } else {
+                   return jsonData.dico[key];
+             }
+          } else {
+              return key;
+          }
+      }
+
+      function renderProviderPanel() {
+          const container = document.getElementById('provider-content');
+          let html = '<table id="provider_table"><thead><tr><th>Provider / Model</th>';
+          
+          // Header: MM
+          jsonData.arr_mm.forEach(mm => {
+              html += `<th style="text-align: center;">${getLabel(mm)}</th>`;
+          });
+          html += '</tr></thead><tbody>';
+
+          // Rows: CCCC
+          jsonData.arr_cccc.forEach(cccc => {
+              html += `<tr><td>${getLabel(cccc)}</td>`;
+              jsonData.arr_mm.forEach(mm => {
+                  let valid = false;
+                  for (const ii of jsonData.arr_ii) {
+                      valid = validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii);
+                      if (valid) break;
+                  }
+                  html += '<td>';
+                  if (valid) {
+                      val = `${state.af}:${state.sss}:${cccc}:${mm}`;
+                      html += `<input type="checkbox" value="${val}" onchange="onProviderSelect()">`;
+                  }
+                  html += '</td>';
+              });
+              html += '</tr>';
+          });
+          html += '</tbody></table>';
+          container.innerHTML = html;
+          
+          // Clear selections when re-rendered
+          state.sel_provider_model.clear();
+          renderVersionPanel(); // cascade clear
+      }
+
+      function onProviderSelect() {
+          const checkboxes = document.querySelectorAll('#provider_table input[type="checkbox"]');
+          state.sel_provider_model.clear();
+          checkboxes.forEach(cb => {
+              if(cb.checked) state.sel_provider_model.add(cb.value);
+          });
+          state.sel_vars.clear();
+          state.sel_levels.clear(); 
+          state.sel_months.clear();
+          renderVersionPanel();
+          renderVariablesPanel();
+          renderVarVerPanel();
+          renderLevelsPanel();
+          renderMonthsPanel();
+          generateOutputs();
+      }
+
+      function renderVersionPanel() {
+          const verPanel = document.getElementById('panel-version');
+          const container = document.getElementById('version-content');
+          state.sel_version.clear(); // Rebuild logic
+
+          if (state.sel_provider_model.size === 0) {
+              container.innerHTML = '<div class="info-text">Select a provider above</div>';
+              verPanel.style.display = 'none';
+              renderVariablesPanel();
+              return;
+          }
+
+          // let html = '<table id="version_table"><thead><tr><th>Provider-Model / Version</th>';
+          // let html = '<table id="version_table"><thead><tr><th></th>';
+          // jsonData.arr_ii.forEach(ii => {
+          //     // html += `<th>${getLabel(ii)}</th>`;
+          //     html += `<th></th>`;
+          // });
+          // html += '</tr></thead><tbody>';
+          let html = '<table id="version_table"><tbody>';
+
+          let visibleRowCount = 0;
+          const rows = Array.from(state.sel_provider_model);
+
+          rows.forEach(rowVal => {
+              // rowVal = af:sss:cccc:mm
+              const parts = rowVal.split(':');
+              const cccc = parts[2];
+              const mm = parts[3];
+              
+              // Calculate valid columns
+              let validCols = [];
+              jsonData.arr_ii.forEach(ii => {
+                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) {
+                      validCols.push(ii);
+                  }
+              });
+
+              if (validCols.length === 1) {
+                  // Hidden row, auto-select
+                  const ii = validCols[0];
+                  state.sel_version.add(`${rowVal}:${ii}`);
+              } else if (validCols.length > 1) {
+                  // Visible row
+                  visibleRowCount++;
+                  const rowLabel = `${getLabel(cccc)} - ${getLabel(mm)}`;
+                  html += `<tr><td>${rowLabel}</td>`;
+                  let rdstatus = "checked";
+                  jsonData.arr_ii.forEach(ii => {
+                      html += '<td>';
+                      if (validCols.includes(ii)) {
+                          const val = `${rowVal}:${ii}`;
+                          // Default checked
+                          // html += `<input type="checkbox" value="${val}" ${rdstatus} onchange="onVersionSelect()"> ${ii}`;
+                          html += `<input type="radio" name="${rowVal}_bt" value="${val}" ${rdstatus} onchange="onVersionSelect()"> ${ii}`;
+                          if (rdstatus != "") state.sel_version.add(val);
+                          rdstatus = "";
+                      }
+                      html += '</td>';
+                  });
+                  html += '</tr>';
+              }
+          });
+
+          html += '</tbody></table>';
+
+          if (visibleRowCount === 0) {
+              container.innerHTML = '<div class="info-text">Automatic version selection applied.</div>';
+              container.style.display = 'hidden';
+              verPanel.style.display = 'none';
+          } else {
+              container.innerHTML = html;
+              container.style.display = 'block';
+              verPanel.style.display = 'block';
+          }
+
+          renderVariablesPanel();
+      }
+
+      function onVersionSelect() {
+          const newSet = new Set();
+          
+          // Add from visible checkboxes
+          //const checkboxes = document.querySelectorAll('#version_table input[type="checkbox"]');
+          // checkboxes.forEach(cb => {
+          //     if(cb.checked) newSet.add(cb.value);
+          // });
+          const radioboxes = document.querySelectorAll('#version_table input[type="radio"]:checked');
+          radioboxes.forEach(rb => {
+              if(rb.checked) newSet.add(rb.value);
+          });
+
+          // Add hidden ones (re-run logic to capture hidden rows)
+          const rows = Array.from(state.sel_provider_model);
+          rows.forEach(rowVal => {
+              const parts = rowVal.split(':');
+              const cccc = parts[2]; const mm = parts[3];
+              let validCols = [];
+              jsonData.arr_ii.forEach(ii => {
+                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) validCols.push(ii);
+              });
+              if (validCols.length === 1) {
+                  newSet.add(`${rowVal}:${validCols[0]}`);
+              }
+          });
+
+          state.sel_version = newSet;
+          state.sel_vars.clear();
+          state.sel_levels.clear(); 
+          state.sel_months.clear();
+          renderVariablesPanel();
+          renderVarVerPanel();
+          renderLevelsPanel();
+          renderMonthsPanel();
+          generateOutputs();
+      }
+
+      // Generic Valid Check for Var, Lvl, Mon against the Selection Tree
+      function checkTreeExistence(varname, lvl=null, mon=null) {
+          // Check if this var exists in ANY of the selected version paths
+          
+          for (let path of state.sel_version) {
+              const p = path.split(':'); // af, sss, cccc, mm, ii
+              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+              
+              let varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
+              if (af === 'derived') {
+                  for (let jj of jsonData.arr_jj) {
+                      const v = varname+'_'+jj;
+                      varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[v];
+                      if (varNode) break;
+                  }
+              }
+              if (varNode) {
+                  const isSurface = (varNode.lvllist.trim() === 'surface');
+                  
+                  if (state.lvltype === 'sl' && !isSurface) continue;
+                  if (state.lvltype === 'pl' && isSurface) continue;
+
+                  // If we are checking specific level or month existence
+                  if (lvl) {
+                      const lvlArr = cleanSplit(varNode.lvllist);
+                      if (!lvlArr.includes(lvl)) continue;
+                  }
+                  
+                  if (mon) {
+                      const monArr = cleanSplit(varNode.monlist);
+                      if (!monArr.includes(mon)) continue;
+                  }
+
+                  return true; // Found at least one valid path
+              }
+          }
+          return false;
+      }
+
+      function checkProtocol(varname, level) {
+          if (state.protocol !== 'forecasts') return true;
+          if (state.protocol == 'SP1') {
+              if (state.lvltype === 'sl') {
+                  const varlist = ['msl', '10u', '10v'];
+                  return varlist.includes(varname); 
+              } else {
+                  if (varname == '') {
+                      const varlist = ['850', '500' , '300'];
+                      return varlist.includes(level); 
+                  } else if (level == '') {
+                      const varlist = ['u', 'v', 'gh'];
+                      return varlist.includes(varname); 
+                  } else {
+                      const varlist = ['u:850', 'v:850', 'u:500' , 'v:500', 'gh:850', 'gh:500', 'gh:300'];
+                      return varlist.includes(varname+':'+level); 
+                  }
+              }
+          } 
+          return true;
+      }
+
+      function renderVariablesPanel() {
+          const container = document.getElementById('vars-content');
+          const msg = document.getElementById('var-msg');
+
+          let varList = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
+          if (state.af === 'derived') {
+              varList = [...new Set(jsonData.arr_ddvar.map(str => str.slice(0, -3)))];
+          }
+          
+          let allDisabled = true;
+
+          let html = '';
+          varList.forEach(v => {
+              const isEnabled = checkTreeExistence(v) && checkProtocol(v, '');
+              if (isEnabled) allDisabled = false;
+              
+              const disabledAttr = isEnabled ? '' : 'disabled';
+              if (!isEnabled && state.sel_vars.has(v)) {
+                  state.sel_vars.delete(v);
+              }
+              
+              const checkedAttr = (isEnabled && state.sel_vars.has(v)) ? 'checked' : '';
+
+              // Label logic
+              let labelText = v;
+              let link = '#';
+              if (jsonData.vardict && jsonData.vardict[v]) {
+                  if (jsonData.vardict[v].id === '') {
+                      labelText = jsonData.vardict[v].long + ' (' +v+ ')';
+                      link = jsonData.vardict[v].href;
+                  } else {
+                      labelText = jsonData.vardict[v].long + ' (' +v+ ') [' + jsonData.vardict[v].units + ']';
+                      link = `https://codes.ecmwf.int/grib/param-db/${jsonData.vardict[v].id}`;
+                  }
+              }
+
+              html += `<div class="checkbox-item" id="div_var_${v}">
+                            <label class="${disabledAttr}"><input type="checkbox" value="${v}" ${disabledAttr} ${checkedAttr} onchange="onVarSelect()">
+                            ${labelText}`;
+              if (link !== "#") 
+                  html += `&nbsp;<a href="${link}" target="_blank" class="${disabledAttr}" title="Details" alt="(Details)">🗗🡕</a>`;
+              html += `</label></div>`;
+          });
+
+          if (state.af === 'derived') {
+              html += `<div class="checkbox-item" id="div_var_GFDL_TC">
+                            <label class="">
+                            <input type="checkbox" value="GFDL_TC" disabled>
+                            <a href="https://github.com/janhueychen/GFDL_TC_Tracker_WP-MIP" target="_blank" title="Access Off site data" alt="(Access Off site data)">GFDL TC Tracking (off site data 🗗🡕)</a> <a href="https://journals.ametsoc.org/view/journals/clim/29/11/jcli-d-15-0389.1.xml" target="_blank" title="Details" alt="(Details)">(Details 🗗🡕)</a>
+                            </label>
+                         </div>`;
+              
+          }
+          
+          container.innerHTML = html;
+          msg.innerText = allDisabled ? "(Make a selection above to enable checkboxes)" : "";
+
+          renderLevelsPanel();
+          renderMonthsPanel();
+          generateOutputs();
+      }
+
+      function onVarSelect() {
+          const checkboxes = document.querySelectorAll('#vars-content input[type="checkbox"]');
+          state.sel_vars.clear();
+          checkboxes.forEach(cb => {
+              if(cb.checked) state.sel_vars.add(cb.value);
+          });
+          state.sel_levels.clear(); 
+          state.sel_months.clear();
+          renderVarVerPanel();
+          renderLevelsPanel();
+          renderMonthsPanel();
+          generateOutputs();
+      }
+
+
+      function renderVarVerPanel() {
+          const verPanel = document.getElementById('panel-varver');
+          const container = document.getElementById('varver-content');
+          state.sel_varver.clear(); // Rebuild logic
+
+          if (state.sel_vars.size === 0 || state.af !== 'derived') {
+              container.innerHTML = '<div class="info-text">Select variables above</div>';
+              verPanel.style.display = 'none';
+              // renderVariablesPanel();
+              return;
+          }
+          // let html = '<table id="varver_table"><thead><tr><th>';
+          // let html = '<table id="varver_table"><thead><tr><th>Variable / Version</th>';
+          // jsonData.arr_jj.forEach(ii => {
+          //     html += `<th></th>`;
+          // });
+          // html += '</tr></thead><tbody>';
+          let html = '<table id="varver_table"><tbody>';
+
+          let visibleRowCount = 0;
+          for (let ver of state.sel_version) {
+              const p = ver.split(':'); 
+              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+              for (let v of state.sel_vars) {
+                  const rowVal=ver+':'+v;
+                  let validCols = [];
+                  for (let jj of jsonData.arr_jj) {
+                      v2 =  v+'_'+jj;
+                      if (jsonData.data[af][sss][cccc][mm][ii][v2]) validCols.push(jj);
+                  }
+                  if (validCols.length === 1) {
+                      // Hidden row, auto-select
+                      const jj= validCols[0];
+                      state.sel_varver.add(`${rowVal}_${jj}`);
+                  } else if (validCols.length > 1) {
+                  // if (validCols.length >= 1) {
+                      // Visible row
+                      visibleRowCount++;
+                      SSS= sss.toUpperCase()
+                      const rowLabel = `${getLabel(cccc, false)} - ${getLabel(mm, false)} - ${getLabel(v, false)}`;
+                      html += `<tr><td>${rowLabel}</td>`;
+                      let rdstatus = "checked";
+                      jsonData.arr_jj.forEach(jj => {
+                          html += '<td>';
+                          if (validCols.includes(jj)) {
+                              const val = `${rowVal}_${jj}`;
+                              // Default checked
+                              // html += `<input type="checkbox" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${jj}`;
+                              html += `<input type="radio" name="${rowVal}_bt" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${jj}`;
+                              if (rdstatus != "") state.sel_varver.add(val);
+                              rdstatus = "";
+                          }
+                          html += '</td>';
+                      });
+                      html += '</tr>';
+                  }
+              }
+          }
+          html += '</tbody></table>';
+
+          if (visibleRowCount === 0) {
+              container.innerHTML = '<div class="info-text">Automatic version selection applied.</div>';
+              container.style.display = 'hidden';
+              verPanel.style.display = 'none';
+          } else {
+              container.innerHTML = html;
+              container.style.display = 'block';
+              verPanel.style.display = 'block';
+          }
+          onVarVerSelect();
+      }
+
+      function onVarVerSelect() {
+          const newSet = new Set();
+          
+          // Add from visible checkboxes
+          const radioboxes = document.querySelectorAll('#varver_table input[type="radio"]:checked');
+          radioboxes.forEach(rb => {
+              if(rb.checked) newSet.add(rb.value);
+          });
+
+          // Add hidden ones (re-run logic to capture hidden rows)
+          for (let ver of state.sel_version) {
+              const p = ver.split(':'); 
+              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+              for (let v of state.sel_vars) {
+                  const rowVal=ver+':'+v;
+                  let validCols = [];
+                  for (let jj of jsonData.arr_jj) {
+                      v2 =  v+'_'+jj;
+                      if (jsonData.data[af][sss][cccc][mm][ii][v2]) validCols.push(jj);
+                  }
+                  if (validCols.length === 1) {
+                      newSet.add(`${rowVal}_${validCols[0]}`);
+                  }
+              }
+          }
+          state.sel_varver = newSet;
+          generateOutputs();
+      }
+    
+      function renderLevelsPanel() {
+          // If lvltype is sl, skip this panel (handled in updateLevelType toggle display)
+          // But we must maintain state.sel_levels = 'surface'
+          if (state.lvltype === 'sl') {
+              state.sel_levels.clear();
+              state.sel_levels.add('surface');
+              return;
+          }
+
+          const container = document.getElementById('levels-content');
+          const msg = document.getElementById('lvl-msg');
+          
+          let allDisabled = true;
+          let html = '';
+
+          jsonData.arr_lvl.forEach(lvl => {
+              let isEnabled = false;
+              for (let v of state.sel_vars) {
+                  if (checkTreeExistence(v, lvl, null)) {
+                      isEnabled = checkProtocol('', lvl);
+                      break;
+                  }
+              }
+
+              if (isEnabled) allDisabled = false;
+              const disabledAttr = isEnabled ? '' : 'disabled';
+              if (!isEnabled && state.sel_levels.has(lvl)) state.sel_levels.delete(lvl);
+              const checkedAttr = (isEnabled && state.sel_levels.has(lvl)) ? 'checked' : '';
+
+              html += `<div class="checkbox-item" id="div_lvl_${lvl}">
+                            <input type="checkbox" value="${lvl}" ${disabledAttr} ${checkedAttr} onchange="onLvlSelect()">
+                            <label class="${disabledAttr}">${lvl}</label>
+                         </div>`;
+          });
+
+          container.innerHTML = html;
+          msg.innerText = allDisabled ? "(Make a selection above to enable checkboxes)" : "";
+          generateOutputs();
+      }
+
+      function onLvlSelect() {
+          const checkboxes = document.querySelectorAll('#levels-content input[type="checkbox"]');
+          state.sel_levels.clear();
+          checkboxes.forEach(cb => {
+              if(cb.checked) state.sel_levels.add(cb.value);
+          });
+          generateOutputs();
+      }
+
+      function renderMonthsPanel() {
+          const container = document.getElementById('months-content');
+          const msg = document.getElementById('mon-msg');
+          const monLabelDict = {
+              "01": "January",
+              "02": "February",
+              "03": "March",
+              "04": "April",
+              "05": "May",
+              "06": "June",
+              "07": "July",
+              "08": "August",
+              "09": "September",
+              "10": "October",
+              "11": "November",
+              "12": "December",
+              "13": "January2025"
+          }
+          let allDisabled = true;
+          let html = '';
+
+          jsonData.arr_mon.forEach(mon => {
+              let isEnabled = false;
+              for (let v of state.sel_vars) {
+                  if (checkTreeExistence(v, null, mon)) {
+                      isEnabled = true;
+                      break;
+                  }
+              }
+
+              if (isEnabled) allDisabled = false;
+              const disabledAttr = isEnabled ? '' : 'disabled';
+              if (!isEnabled && state.sel_months.has(mon)) state.sel_months.delete(mon);
+              const checkedAttr = (isEnabled && state.sel_months.has(mon)) ? 'checked' : '';
+
+              const monLabel = monLabelDict[mon];
+              html += `<div class="checkbox-item" id="div_mon_${mon}">
+                            <label class="${disabledAttr}">
+                            <input type="checkbox" value="${mon}" ${disabledAttr} ${checkedAttr} onchange="onMonSelect()">
+                            ${mon} - ${monLabel}</label>
+                         </div>`;
+          });
+
+          container.innerHTML = html;
+          msg.innerText = allDisabled ? "(Make a selection above to enable checkboxes)" : "";
+          generateOutputs();
+      }
+
+      function onMonSelect() {
+          const checkboxes = document.querySelectorAll('#months-content input[type="checkbox"]');
+          state.sel_months.clear();
+          checkboxes.forEach(cb => {
+              if(cb.checked) state.sel_months.add(cb.value);
+          });
+          generateOutputs();
+      }
+
+      // --- HELPER UI ---
+      function selectAll(containerId, isSelect) {
+          const selector = `#${containerId} input[type="checkbox"]`;
+          const inputs = document.querySelectorAll(selector);
+          inputs.forEach(input => {
+              if (!input.disabled) {
+                  input.checked = isSelect;
+              }
+          });
+
+          if (containerId === 'provider_table') onProviderSelect();
+          if (containerId === 'version_table') onVersionSelect();
+          if (containerId === 'vars-content') onVarSelect();
+          if (containerId === 'levels-content') onLvlSelect();
+          if (containerId === 'months-content') onMonSelect();
+      }
+
+      function copyToClipboard(elementId) {
+          const el = document.getElementById(elementId);
+          el.select();
+          document.execCommand('copy');
+      }
+
+      // --- GENERATION & OUTPUTS ---
+
+      function entryValidation(af_sss_cccc_mm_ii, varname, lvl='', mon='') {
+          const p = af_sss_cccc_mm_ii.split(':'); 
+          const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+
+          const varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
+          if (!varNode) return false;
+          if (af === 'derived') return true;
+          
+          // if ((lvl === '' || lvl === '*') && (mon === '' || mon === '*')) return true;
+
+          // Use cleanSplit here as well to avoid empty strings in checks
+          const hasLvl = (lvl === '' || lvl === '*' || cleanSplit(varNode.lvllist).includes(lvl));
+          const hasMon = (mon === '' || mon === '*' || cleanSplit(varNode.monlist).includes(mon));
+          const inProto = checkProtocol(varname, lvl);
+
+          return hasLvl && hasMon && inProto;
+      }
+
+      function filenameCreation(af_sss_cccc_mm_ii, varname, lvl='', mon='') {
+          const p = af_sss_cccc_mm_ii.split(':'); 
+          const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+
+          if (af === 'analyses') {
+              if (lvl === 'surface') {
+                  return `${varname}_${cccc}_sl_${mon}.grib2`;
+              } else {
+                  return `${varname}_${lvl}_${cccc}_pl_${mon}.grib2`;
+              }
+          } else if (af === 'forecasts') {
+              if (state.lvltype === 'sl') {
+                  return `${varname}_${sss}_${cccc}_${mm}_${ii}_sl_${mon}.grib2`;
+              } else {
+                  return `${varname}_${lvl}_${sss}_${cccc}_${mm}_${ii}_pl_${mon}.grib2`;
+              }
+          } else { // derived
+              return `${varname}_${sss}_${cccc}_${mm}_${ii}.csv`;
+          }
+          return "";
+      }
+
+      function pathCreation(af_sss_cccc_mm_ii, varname='', short=false) {
+          const p = af_sss_cccc_mm_ii.split(':'); 
+          const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+
+          if (af === 'analyses') {
+              if (short) {
+                  return `${af}/${cccc}/`;
+              } else { 
+                  return `${af}/${cccc}/${varname}`;
+              }
+          } else {
+              if (short) {
+                  return `${af}/${sss}/${cccc}/`;
+              } else { 
+                  return `${af}/${sss}/${cccc}/${mm}_${ii}/${varname}`;
+              }
+          }
+          return "";
+      }
+
+      function vpathCreation(varname, lvl) {
+          let l = (lvl === 'surface') ? '1' : lvl;
+          return `vindex/${varname}/${l}`;
+      }
+
+      function generateOutputs() {
+          const pathsArea = document.getElementById('out-paths');
+          // const vpathsArea = document.getElementById('out-vpaths');
+          const pathCount = document.getElementById('path-count');
+          // const vpathCount = document.getElementById('vpath-count');
+
+          pathsArea.value = '';
+
+          const isEmpty1 = (state.sel_version.size === 0 || state.sel_vars.size === 0)
+          const isEmpty2 = (state.sel_levels.size === 0 || state.sel_months.size === 0)
+          if (isEmpty1 || (state.af !== 'derived' && isEmpty2)) {
+              const msg = "# Select at least one option in every selection box above";
+              pathsArea.vaue = msg;
+              // vpathsArea.value = msg;
+              pathCount.innerText = "(0 items)";
+              // vpathCount.innerText = "(0 items)";
+              return;
+          }
+
+          let pathDict = {};
+          let nfiles = 0;
+          let npatterns = 0;
+          
+          if (state.af === 'derived') {
+              
+              for (let varver of state.sel_varver) {
+                  const p = varver.split(':'); 
+                  const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4], v=p[5];
+                  if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
+                  if (entryValidation(varver, v)) {
+                      const fname = filenameCreation(varver, v);
+                      const pDir = pathCreation(varver);
+                      pathDict[pDir] ??= [];
+                      pathDict[pDir].push(`${fname}`);
+                      npatterns++;
+                      nfiles++;
+                  }
+              }
+              
+          } else {
+              
+              for (let ver of state.sel_version) {
+                  // if (shortPath === '') shortPath = pathCreation(ver, '', true); 
+                  const p = ver.split(':'); 
+                  const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+                  for (let v of state.sel_vars) {
+                      if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
+                      const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
+                      const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
+                      const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
+                      const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+
+                      for (let l of selLevelList) {
+                          for (let m of selMonthList) {
+                              if (entryValidation(ver, v, l, m)) {
+                                  const fname = filenameCreation(ver, v, l, m);
+                                  const pDir = pathCreation(ver);
+                                  // pathList.push(`/${pDir}/${fname}`);
+                                  // pathList.push(`${fname}`);
+                                  pathDict[pDir] ??= [];
+                                  pathDict[pDir].push(`${fname}`);
+                                  npatterns++;
+                                  // pathList.push(`${fname}`);
+                              }
+                          }
+                      }
+                      for (let l of state.sel_levels) {
+                          for (let m of state.sel_months) {
+                              if (entryValidation(ver, v, l, m)) nfiles++;
+                          }
+                      }
+                  }
+              }
+              
+          }
+
+          const wgetcmdbase = 'wget -e robots=off -nd -r --no-parent --no-verbose --show-progress --rejected-log=/dev/null -A';
+          // const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+shortPath;
+          let wgetcmd = '';
+          const outerSize = 30;
+          const innerSize = 5;
+          
+          for (const [pDir, pathList] of Object.entries(pathDict)) {
+              const urlbase = 'http://hpfx.collab.science.gc.ca/~swpm001/WP-MIP/'+pDir;
+              for (let i = 0; i < pathList.length; i += outerSize) {
+                  const bigChunk = pathList.slice(i, i + outerSize);
+                  wgetcmd += wgetcmdbase + ' "\\\n';
+                  for (let j = 0; j < bigChunk.length; j += innerSize) {
+                      const smallChunk = bigChunk.slice(j, j + innerSize);
+                      wgetcmd += smallChunk.filter(Boolean).join(',');
+                      if (j+smallChunk.length < bigChunk.length) wgetcmd += ',';
+                      wgetcmd += '\\\n';
+                  }
+                  wgetcmd += '" ' + urlbase + '\n\n';
+              }
+          }
+          //pathCount.innerText = `(${pathList.length} patterns ; ${nfiles} files)`;
+          pathCount.innerText = `(${npatterns} patterns ; ${nfiles} files)`;
+          pathsArea.value = wgetcmd;
+      }
+
+    </script>
+    </main>
+</body>
+</html>
+

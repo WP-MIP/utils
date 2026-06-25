@@ -2,6 +2,7 @@
 basedir=~/public_html/WP-MIP
 dbanal=analyses
 dbfcst=forecasts
+dbderi=derived
 
 streams="${dbanal} ${dbfcst}/*"
 
@@ -40,7 +41,8 @@ varnames="'vardict':{
                      'sshf':{'long':'Time-Integrated Surface Sensible Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'146'},
                      'slhf':{'long':'Time-Integrated Surface Latent Heat Flux', 'units':'J m<sup>-2</sup>', 'id':'147'},
                      'lsm':{'long':'Land-Sea Mask', 'units':'', 'id':'172'},
-                     'orog':{'long':'Orography', 'units':'m', 'id':'228002'}
+                     'orog':{'long':'Orography', 'units':'m', 'id':'228002'},
+                     'wgnetc':{'long':'JMA WGNE TC Tracking', 'units':'', 'id':'', 'href':'https://journals.ametsoc.org/view/journals/bams/98/11/bams-d-16-0133.1.pdf'}
 }"
 
 
@@ -49,10 +51,11 @@ varnames="'vardict':{
 # /analyses/     CCCC/     /var/{surfvar,var_level}_    LL_II.grib2
 # /forecasts/SSS/CCCC/MM_II/var/{surfvar,var_level}_SSS_LL_II.grib2
 
-# analyses/     cwao/      10u/ 10u_       cwao_      sl_01.grib2
-# analyses/     cwao/      u/   u_1000_    cwao_      pl_01.grib2
-# forecasts/oic/cwao/pm_00/10u/ 10u_   oic_cwao_pm_00_sl_01.grib2
-# forecasts/oic/cwao/pm_00/u/   u_1000_oic_cwao_pm_00_pl_01.grib2
+# analyses/     cwao/      10u/      10u_          cwao_      sl_01.grib2
+# analyses/     cwao/      u/        u_1000_       cwao_      pl_01.grib2
+# forecasts/oic/cwao/pm_00/10u/      10u_      oic_cwao_pm_00_sl_01.grib2
+# forecasts/oic/cwao/pm_00/u/        u_1000_   oic_cwao_pm_00_pl_01.grib2
+# derived/  oic/cwao/pm_00/wgnetc_00/wgnetc_00_sic_egrr_pm_00.csv
 
 # SSS: Steam (analyses, oic:forecasts/oic, sic:forecasts/sic)
 # CCCC: center acronym
@@ -60,11 +63,14 @@ varnames="'vardict':{
 # II: Iteration number (from 0)
 # LL: Level Type (pl,sl)
 # MON: Month
+# JJ:  Derived var iteration number
 
 apl=analyses/CCCC/VAR/VAR_LVL_CCCC_LL_MON.grib2
 asl=analyses/CCCC/VAR/VAR_CCCC_LL_MON.grib2
 fpl=forecasts/SSS/CCCC/MM_II/VAR/VAR_LVL_SSS_CCCC_MM_II_LL_MON.grib2
 fsl=forecasts/SSS/CCCC/MM_II/VAR/VAR_SSS_CCCC_MM_II_LL_MON.grib2
+ddd=derived/SSS/CCCC/MM_II/VAR_JJ/VAR_JJ_SSS_CCCC_MM_II.csv
+
 aaa="apl asl fpl fsl"
 
 mystderr() {
@@ -120,6 +126,13 @@ getvar() {
       find . -type f -name "*_${_t}_??.grib2" | cut -d/ -f2 | sort -u
    )
 }
+getddvar() {
+   _s=$1
+   (
+      cd ${basedir}/${_s} && \
+      find . -type f -name "*.csv" | cut -d/ -f2 | sort -u
+   )
+}
 
 getlvl() {
    _s=$1
@@ -164,18 +177,21 @@ allsss=""
 allcccc=""
 allplvar=""
 allslvar=""
+allddvar=""
 alllvl=""
 allmon=""
 allmm=""
 allii=""
+alljj=""
 
-aflist="analyses forecasts"
+aflist="analyses forecasts derived"
 
 for af in ${aflist} ; do
    mystderr af=$af 
    ssslist=$(getsss ${af})
    allsss="${allsss} ${ssslist}"
    for sss in ${ssslist} ; do
+      
       mystderr af=$af sss=$sss
       sss1=$sss
       if [[ ${af} == "analyses" ]] ; then sss1=.; fi
@@ -183,7 +199,8 @@ for af in ${aflist} ; do
       cccclist=$(getcccc ${af}/${sss1})
       allcccc="${allcccc} ${cccclist}"
       for cccc in ${cccclist} ; do
-
+         echo "+ Scanning: ${af}/${sss1}/${cccc}" 1>&2
+         
          mmlist=$(getmm ${af}/${sss1}/${cccc})
          mystderr af=$af sss=$sss cccc=$cccc : mmlist=${mmlist}
          allmm="${allmm} ${mmlist}"
@@ -198,12 +215,21 @@ for af in ${aflist} ; do
                mmii1=${mmii}
                if [[ ${af} == "analyses" ]] ; then mmii1=. ; fi
                mystderr af=$af sss=$sss cccc=$cccc mm=$mm ii=$ii mmii=$mmii
+
                
-               plvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} pl)
-               allplvar="${allplvar} ${plvarlist}"
-               slvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} sl)
-               allslvar="${allslvar} ${slvarlist}"
-               
+               if [[ ${af} == "derived" ]] ; then
+                  plvarlist=""
+                  slvarlist=""
+                  ddvarlist=$(getddvar ${af}/${sss1}/${cccc}/${mmii1})
+                  allddvar="${allddvar} ${ddvarlist}"
+               else
+                  plvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} pl)
+                  allplvar="${allplvar} ${plvarlist}"
+                  slvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} sl)
+                  allslvar="${allslvar} ${slvarlist}"
+                  ddvarlist=""
+               fi
+
                for var in ${plvarlist} ; do
                   lvllist=$(getlvl ${af}/${sss1}/${cccc}/${mmii1}/${var})
                   alllvl="${alllvl} ${lvllist}"
@@ -216,6 +242,10 @@ for af in ${aflist} ; do
                   monlist=$(getmon ${af}/${sss1}/${cccc}/${mmii1}/${var})
                   addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "surface"
                   addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "${monlist}"
+               done
+               for var in ${ddvarlist} ; do
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "derived"
+                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "derived"
                done
             done
          done
@@ -231,6 +261,12 @@ allplvar="$(echo ${allplvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allslvar="$(echo ${allslvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 alllvl="$(echo ${alllvl}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allmon="$(echo ${allmon}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allddvar="$(echo ${allddvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+for v in ${allddvar} ; do
+   jj=${v#*_}
+   alljj="${alljj} ${jj}"
+done
+alljj="$(echo ${alljj}       | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 
 addtojson alllvltyp "surface pressure"
 addtojson allaf "${aflist}"
@@ -242,6 +278,8 @@ addtojson allplvar "${allplvar}"
 addtojson allslvar "${allslvar}"
 addtojson alllvl "${alllvl}"
 addtojson allmon "${allmon}"
+addtojson alljj "${alljj}"
+addtojson allddvar "${allddvar}"
 
 # addtojson prodlist "${allsss}"
 # addtojson cntrlist "${allcccc}"
@@ -258,10 +296,14 @@ for x in $(cat ~/public_html/sp.tbl | tr ' ' ':') ; do
 done
 
 json_content=$(echo ${json_content} | tr '\n' ' ')
+# jfile0=~/public_html/content2.json
 jfile0=~/public_html/content.json
 jfile1=${jfile0}-$(date '+%Y%m%d.%H%M%S')
 echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}" > ${jfile1}
 rm -f ${jfile0} && ln -sf ${jfile1} ${jfile0}
 archive_dir=~swpm001/public_html/archive
 mkdir -p ${archive_dir} 2>/dev/null || true
-mv $(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ') ${archive_dir} || true
+oldfiles=$(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ')
+if [[ "x${oldfiles}" != "x" ]] ; then
+   mv $(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ') ${archive_dir} || true
+fi
