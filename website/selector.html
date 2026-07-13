@@ -741,7 +741,7 @@
               if (mt.includes(key)) {
                   return jsonData.dico[key];
               }
-              const name = jsonData.dico[key].replace("/","_");
+              const name = jsonData.dico[key].replace("/","_").replace(" ","");
               if (addLink) {
                   return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
               } else {
