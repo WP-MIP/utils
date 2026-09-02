@@ -499,6 +499,7 @@
               renderProviderPanel();
               renderVersionPanel();
               renderVariablesPanel();
+              renderVarVerPanel();
               renderLevelsPanel();
               renderMonthsPanel();
               generateOutputs();
@@ -517,6 +518,7 @@
               renderProviderPanel();
               renderVersionPanel();
               renderVariablesPanel();
+              renderVarVerPanel();
               renderLevelsPanel();
               renderMonthsPanel();
               generateOutputs();
@@ -534,6 +536,7 @@
               renderProviderPanel();
               renderVersionPanel();
               renderVariablesPanel();
+              renderVarVerPanel();
               renderLevelsPanel();
               renderMonthsPanel();
               generateOutputs();
@@ -551,6 +554,7 @@
               renderProviderPanel();
               renderVersionPanel();
               renderVariablesPanel();
+              renderVarVerPanel();
               renderLevelsPanel();
               renderMonthsPanel();
               generateOutputs();
@@ -730,15 +734,19 @@
 
       // --- RENDERERS ---
 
-      function getLabel(key) {
+      function getLabel(key, addLink=true) {
           //return (jsonData.dico && jsonData.dico[key]) ? jsonData.dico[key] : key;
           if (jsonData.dico && jsonData.dico[key]) {
               const mt = ["pm", "hy", "ai"];
               if (mt.includes(key)) {
                   return jsonData.dico[key];
               }
-              const name = jsonData.dico[key].replace("/","_");
-              return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
+              const name = jsonData.dico[key].replace("/","_").replace(" ","");
+              if (addLink) {
+                  return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
+              } else {
+                   return jsonData.dico[key];
+             }
           } else {
               return key;
           }
@@ -791,6 +799,7 @@
           state.sel_months.clear();
           renderVersionPanel();
           renderVariablesPanel();
+          renderVarVerPanel();
           renderLevelsPanel();
           renderMonthsPanel();
           generateOutputs();
@@ -808,12 +817,14 @@
               return;
           }
 
-          let html = '<table id="version_table"><thead><tr><th>Provider-Model / Version</th>';
-          jsonData.arr_ii.forEach(ii => {
-              // html += `<th>${getLabel(ii)}</th>`;
-              html += `<th></th>`;
-          });
-          html += '</tr></thead><tbody>';
+          // let html = '<table id="version_table"><thead><tr><th>Provider-Model / Version</th>';
+          // let html = '<table id="version_table"><thead><tr><th></th>';
+          // jsonData.arr_ii.forEach(ii => {
+          //     // html += `<th>${getLabel(ii)}</th>`;
+          //     html += `<th></th>`;
+          // });
+          // html += '</tr></thead><tbody>';
+          let html = '<table id="version_table"><tbody>';
 
           let visibleRowCount = 0;
           const rows = Array.from(state.sel_provider_model);
@@ -905,6 +916,7 @@
           state.sel_levels.clear(); 
           state.sel_months.clear();
           renderVariablesPanel();
+          renderVarVerPanel();
           renderLevelsPanel();
           renderMonthsPanel();
           generateOutputs();
@@ -918,8 +930,14 @@
               const p = path.split(':'); // af, sss, cccc, mm, ii
               const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
               
-              const varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
-              
+              let varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
+              if (af === 'derived') {
+                  for (let jj of jsonData.arr_jj) {
+                      const v = varname+'_'+jj;
+                      varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[v];
+                      if (varNode) break;
+                  }
+              }
               if (varNode) {
                   const isSurface = (varNode.lvllist.trim() === 'surface');
                   
@@ -965,18 +983,13 @@
           return true;
       }
 
-      // const tmp_arr_derivedvar = ["aa_00", "aa_01", "bb_00", "cc_01"];
-
       function renderVariablesPanel() {
           const container = document.getElementById('vars-content');
           const msg = document.getElementById('var-msg');
 
           let varList = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
           if (state.af === 'derived') {
-              // items = tmp_arr_derivedvar
-              const items = jsonData.arr_ddvar;
-              varList = items;
-              // varList = [...new Set(items.map(str => str.slice(0, -3)))];
+              varList = [...new Set(jsonData.arr_ddvar.map(str => str.slice(0, -3)))];
           }
           
           let allDisabled = true;
@@ -994,20 +1007,16 @@
               const checkedAttr = (isEnabled && state.sel_vars.has(v)) ? 'checked' : '';
 
               // Label logic
-              const v2 = (state.af === 'derived') ? v.slice(0, -3) : v;
-              let labelText = v2;
-              if (state.af === 'derived') {
-                  if (jsonData.arr_jj.length > 1) {
-                      const nbvar = varList.reduce((acc, item) => {
-                          return item.startsWith(v2) ? acc + 1 : acc;
-                      }, 0);
-                      if (nbvar > 1) labelText = v;
-                  }
-              }
+              let labelText = v;
               let link = '#';
-              if (jsonData.vardict && jsonData.vardict[v2]) {
-                  labelText = jsonData.vardict[v2].long + ' (' +v2+ ') [' + jsonData.vardict[v2].units + ']';
-                  link = `https://codes.ecmwf.int/grib/param-db/${jsonData.vardict[v2].id}`;
+              if (jsonData.vardict && jsonData.vardict[v]) {
+                  if (jsonData.vardict[v].id === '') {
+                      labelText = jsonData.vardict[v].long + ' (' +v+ ')';
+                      link = jsonData.vardict[v].href;
+                  } else {
+                      labelText = jsonData.vardict[v].long + ' (' +v+ ') [' + jsonData.vardict[v].units + ']';
+                      link = `https://codes.ecmwf.int/grib/param-db/${jsonData.vardict[v].id}`;
+                  }
               }
 
               html += `<div class="checkbox-item" id="div_var_${v}">
@@ -1020,9 +1029,9 @@
 
           if (state.af === 'derived') {
               html += `<div class="checkbox-item" id="div_var_GFDL_TC">
-                            <label class="disabled">
+                            <label class="">
                             <input type="checkbox" value="GFDL_TC" disabled>
-                            <a href="https://github.com/janhueychen/GFDL_TC_Tracker_WP-MIP" target="_blank" class="disabled" title="Access Off site data" alt="(Access Off site data)">[GFDL TC (off site data) 🗗🡕]</a>
+                            <a href="https://github.com/janhueychen/GFDL_TC_Tracker_WP-MIP" target="_blank" title="Access Off site data" alt="(Access Off site data)">GFDL TC Tracking (off site data 🗗🡕)</a> <a href="https://journals.ametsoc.org/view/journals/apme/60/9/JAMC-D-20-0175.1.xml" target="_blank" title="Details" alt="(Details)">(Details 🗗🡕)</a>
                             </label>
                          </div>`;
               
@@ -1044,6 +1053,7 @@
           });
           state.sel_levels.clear(); 
           state.sel_months.clear();
+          renderVarVerPanel();
           renderLevelsPanel();
           renderMonthsPanel();
           generateOutputs();
@@ -1061,56 +1071,53 @@
               // renderVariablesPanel();
               return;
           }
-
-          let html = '<table id="varver_table"><thead><tr><th>Variable / Version</th>';
-      //     jsonData.arr_ii.forEach(ii => {
-      //         html += `<th></th>`;
-      //     });
-      //     html += '</tr></thead><tbody>';
+          // let html = '<table id="varver_table"><thead><tr><th>';
+          // let html = '<table id="varver_table"><thead><tr><th>Variable / Version</th>';
+          // jsonData.arr_jj.forEach(ii => {
+          //     html += `<th></th>`;
+          // });
+          // html += '</tr></thead><tbody>';
+          let html = '<table id="varver_table"><tbody>';
 
           let visibleRowCount = 0;
-          const rows = Array.from(state.sel_vars);
-
-          rows.forEach(rowVal => {
-      //         // rowVal = af:sss:cccc:mm
-      //         const parts = rowVal.split(':');
-      //         const cccc = parts[2];
-      //         const mm = parts[3];
-              
-      //         // Calculate valid columns
-      //         let validCols = [];
-      //         jsonData.arr_ii.forEach(ii => {
-      //             if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) {
-      //                 validCols.push(ii);
-      //             }
-      //         });
-
-      //         if (validCols.length === 1) {
-      //             // Hidden row, auto-select
-      //             const ii = validCols[0];
-      //             state.sel_varver.add(`${rowVal}:${ii}`);
-      //         } else if (validCols.length > 1) {
-      //             // Visible row
-      //             visibleRowCount++;
-      //             const rowLabel = `${getLabel(cccc)} - ${getLabel(mm)}`;
-      //             html += `<tr><td>${rowLabel}</td>`;
-      //             let rdstatus = "checked";
-      //             jsonData.arr_ii.forEach(ii => {
-      //                 html += '<td>';
-      //                 if (validCols.includes(ii)) {
-      //                     const val = `${rowVal}:${ii}`;
-      //                     // Default checked
-      //                     // html += `<input type="checkbox" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${ii}`;
-      //                     html += `<input type="radio" name="${rowVal}_bt" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${ii}`;
-      //                     if (rdstatus != "") state.sel_varver.add(val);
-      //                     rdstatus = "";
-      //                 }
-      //                 html += '</td>';
-      //             });
-      //             html += '</tr>';
-      //         }
-          });
-
+          for (let ver of state.sel_version) {
+              const p = ver.split(':'); 
+              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+              for (let v of state.sel_vars) {
+                  const rowVal=ver+':'+v;
+                  let validCols = [];
+                  for (let jj of jsonData.arr_jj) {
+                      v2 =  v+'_'+jj;
+                      if (jsonData.data[af][sss][cccc][mm][ii][v2]) validCols.push(jj);
+                  }
+                  if (validCols.length === 1) {
+                      // Hidden row, auto-select
+                      const jj= validCols[0];
+                      state.sel_varver.add(`${rowVal}_${jj}`);
+                  } else if (validCols.length > 1) {
+                  // if (validCols.length >= 1) {
+                      // Visible row
+                      visibleRowCount++;
+                      SSS= sss.toUpperCase()
+                      const rowLabel = `${getLabel(cccc, false)} - ${getLabel(mm, false)} - ${getLabel(v, false)}`;
+                      html += `<tr><td>${rowLabel}</td>`;
+                      let rdstatus = "checked";
+                      jsonData.arr_jj.forEach(jj => {
+                          html += '<td>';
+                          if (validCols.includes(jj)) {
+                              const val = `${rowVal}_${jj}`;
+                              // Default checked
+                              // html += `<input type="checkbox" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${jj}`;
+                              html += `<input type="radio" name="${rowVal}_bt" value="${val}" ${rdstatus} onchange="onVarVerSelect()"> ${jj}`;
+                              if (rdstatus != "") state.sel_varver.add(val);
+                              rdstatus = "";
+                          }
+                          html += '</td>';
+                      });
+                      html += '</tr>';
+                  }
+              }
+          }
           html += '</tbody></table>';
 
           if (visibleRowCount === 0) {
@@ -1122,44 +1129,37 @@
               container.style.display = 'block';
               verPanel.style.display = 'block';
           }
-
-      //     renderVariablesPanel();
+          onVarVerSelect();
       }
 
-      // function onVarVerSelect() {
-      //     const newSet = new Set();
+      function onVarVerSelect() {
+          const newSet = new Set();
           
-      //     // Add from visible checkboxes
-      //     //const checkboxes = document.querySelectorAll('#varver_table input[type="checkbox"]');
-      //     // checkboxes.forEach(cb => {
-      //     //     if(cb.checked) newSet.add(cb.value);
-      //     // });
-      //     const radioboxes = document.querySelectorAll('#varver_table input[type="radio"]:checked');
-      //     radioboxes.forEach(rb => {
-      //         if(rb.checked) newSet.add(rb.value);
-      //     });
+          // Add from visible checkboxes
+          const radioboxes = document.querySelectorAll('#varver_table input[type="radio"]:checked');
+          radioboxes.forEach(rb => {
+              if(rb.checked) newSet.add(rb.value);
+          });
 
-      //     // Add hidden ones (re-run logic to capture hidden rows)
-      //     const rows = Array.from(state.sel_provider_model);
-      //     rows.forEach(rowVal => {
-      //         const parts = rowVal.split(':');
-      //         const cccc = parts[2]; const mm = parts[3];
-      //         let validCols = [];
-      //         jsonData.arr_ii.forEach(ii => {
-      //             if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) validCols.push(ii);
-      //         });
-      //         if (validCols.length === 1) {
-      //             newSet.add(`${rowVal}:${validCols[0]}`);
-      //         }
-      //     });
-
-      //     state.sel_varver = newSet;
-      //     state.sel_levels.clear(); 
-      //     state.sel_months.clear();
-      //     renderLevelsPanel();
-      //     renderMonthsPanel();
-      //     generateOutputs();
-      // }
+          // Add hidden ones (re-run logic to capture hidden rows)
+          for (let ver of state.sel_version) {
+              const p = ver.split(':'); 
+              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+              for (let v of state.sel_vars) {
+                  const rowVal=ver+':'+v;
+                  let validCols = [];
+                  for (let jj of jsonData.arr_jj) {
+                      v2 =  v+'_'+jj;
+                      if (jsonData.data[af][sss][cccc][mm][ii][v2]) validCols.push(jj);
+                  }
+                  if (validCols.length === 1) {
+                      newSet.add(`${rowVal}_${validCols[0]}`);
+                  }
+              }
+          }
+          state.sel_varver = newSet;
+          generateOutputs();
+      }
     
       function renderLevelsPanel() {
           // If lvltype is sl, skip this panel (handled in updateLevelType toggle display)
@@ -1310,7 +1310,7 @@
           return hasLvl && hasMon && inProto;
       }
 
-      function filenameCreation(af_sss_cccc_mm_ii, varname, lvl, mon) {
+      function filenameCreation(af_sss_cccc_mm_ii, varname, lvl='', mon='') {
           const p = af_sss_cccc_mm_ii.split(':'); 
           const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
 
@@ -1379,18 +1379,36 @@
           let pathDict = {};
           let nfiles = 0;
           let npatterns = 0;
-          for (let ver of state.sel_version) {
-              // if (shortPath === '') shortPath = pathCreation(ver, '', true); 
-              const p = ver.split(':'); 
-              const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
-              for (let v of state.sel_vars) {
+          
+          if (state.af === 'derived') {
+              
+              for (let varver of state.sel_varver) {
+                  const p = varver.split(':'); 
+                  const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4], v=p[5];
                   if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
-                  const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
-                  const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
-                  const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
-                  const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+                  if (entryValidation(varver, v)) {
+                      const fname = filenameCreation(varver, v);
+                      const pDir = pathCreation(varver);
+                      pathDict[pDir] ??= [];
+                      pathDict[pDir].push(`${fname}`);
+                      npatterns++;
+                      nfiles++;
+                  }
+              }
+              
+          } else {
+              
+              for (let ver of state.sel_version) {
+                  // if (shortPath === '') shortPath = pathCreation(ver, '', true); 
+                  const p = ver.split(':'); 
+                  const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
+                  for (let v of state.sel_vars) {
+                      if (!jsonData.data[af][sss][cccc][mm][ii][v]) continue;
+                      const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
+                      const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
+                      const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
+                      const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
 
-                  if (af !== 'derived') {
                       for (let l of selLevelList) {
                           for (let m of selMonthList) {
                               if (entryValidation(ver, v, l, m)) {
@@ -1410,17 +1428,9 @@
                               if (entryValidation(ver, v, l, m)) nfiles++;
                           }
                       }
-                  } else { // af === derived
-                      if (entryValidation(ver, v)) {
-                          const fname = filenameCreation(ver, v, 0, 0);
-                          const pDir = pathCreation(ver);
-                          pathDict[pDir] ??= [];
-                          pathDict[pDir].push(`${fname}`);
-                          npatterns++;
-                          nfiles++;
-                      }
                   }
               }
+              
           }
 
           const wgetcmdbase = 'wget -e robots=off -nd -r --no-parent --no-verbose --show-progress --rejected-log=/dev/null -A';
