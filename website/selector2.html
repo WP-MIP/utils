@@ -262,6 +262,10 @@
                         <input type="radio" name="product_type" value="derived"> 
                         Derived
                     </label>
+                    <label>
+                        <input type="radio" name="product_type" value="observations"> 
+                        Observations
+                    </label>
                 </div>
             </div>
                         
@@ -442,7 +446,7 @@
       async function fetchData() {
           try {
               // Cache busting parameter to ensure re-read
-              const url = 'content.json?t=' + new Date().getTime();
+              const url = 'content2.json?t=' + new Date().getTime();
               const response = await fetch(url);
               if (!response.ok) throw new Error("Failed to load content.json");
               jsonData = await response.json();
@@ -457,6 +461,9 @@
               jsonData.arr_ddvar = cleanSplit(jsonData.allddvar);
               jsonData.arr_lvl = cleanSplit(jsonData.alllvl).sort((a, b) => b - a);
               jsonData.arr_mon = cleanSplit(jsonData.allmon);
+              jsonData.arr_obspl = cleanSplit(jsonData.allobspl)
+              jsonData.arr_obssl = cleanSplit(jsonData.allobssl)
+              jsonData.arr_obspro = cleanSplit(jsonData.allobspro)
 
               // Initial Render
               updateProductType();  // Sets state af
@@ -575,7 +582,7 @@
        }
       
       function updateStreamType() {
-          if (state.af != 'analyses') {
+          if (state.af != 'analyses' && state.af != 'observations') {
               state.sss = document.querySelector('input[name="stream_type"]:checked').value;
           } else {
               state.sss = 'oic';
@@ -620,14 +627,16 @@
       }
 
       function renderLevelTypePanel() {
-          const afStates = ["analyses", "forecasts"];
+          const afStates = ["analyses", "forecasts", "observations"];
           const isAfDerived = (!afStates.includes(state.af));
+          const isAfObsSlOnly = (state.af == "observations" && jsonData.arr_obspl.length == 0);
           const container = document.getElementById('leveltype-content');
           const children = container.querySelectorAll('*');
+          if (isAfObsSlOnly) state.lvltype = 'sl';
           children.forEach(element => {
               if (element.tagName === 'LABEL') {
                   // if (element.id === 'label-sl') {
-                      element.className = (isAfDerived) ? 'disabled' : 'none'; 
+                  element.className = (isAfDerived || (element.id === 'label-pl' && isAfObsSlOnly)) ? 'disabled' : 'none'; 
                   // } else if (element.id === 'label-pl') {
                   //     element.className = (isAfDerived) ? 'disabled' : 'none'; 
                   // }
@@ -642,6 +651,7 @@
                           element.setAttribute('checked', 'true');
                       } else {
                           element.removeAttribute('checked');
+                          if (isAfObsSlOnly) element.setAttribute('disabled', 'true');
                       }
                   }
               }
@@ -695,7 +705,10 @@
           }
 
           const varList1 = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
-          const varList = (state.af === 'derived') ? jsonData.arr_ddvar : varList1;
+          let varList = (state.af === 'derived') ? jsonData.arr_ddvar : varList1;
+          if (state.af === 'observations') {
+              varList = (state.lvltype === 'sl') ? jsonData.arr_obssl : jsonData.arr_obspl;
+          }
           let isValid = false;
 
           // Check varnames
@@ -746,13 +759,54 @@
                   return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
               } else {
                    return jsonData.dico[key];
-             }
+              }
+          } else if (jsonData.obsdict[key]) {
+              const name = jsonData.obsdict[key]['long'].replace("/","_").replace(" ","");
+              if (addLink) {
+                  return jsonData.obsdict[key]['long']+' <a href="'+jsonData.obsdict[key]['href']+'">🗗🡕</a>';
+              } else {
+                   return jsonData.obsdict[key];
+              }
           } else {
               return key;
           }
       }
 
+      function renderObsProviderPanel() {
+          const container = document.getElementById('provider-content');
+          let html = '<table id="provider_table"><thead><tr>';
+          html += '<th>Provider</th><th>&nbsp;</th>';
+          html += '</tr></thead><tbody>';
+
+          // Rows: obspro
+          jsonData.arr_obspro.forEach(cccc => {
+              html += `<tr><td>${getLabel(cccc)}</td>`;
+              let valid = false;
+              for (const ii of jsonData.arr_ii) {
+                  valid = validate_cccc_mm_ii(state.af, '.', cccc, '.', ii);
+                  if (valid) break;
+              }
+              html += '<td>';
+              if (valid) {
+                  val = `${state.af}:.:${cccc}:.`;
+                  html += `<input type="checkbox" value="${val}" onchange="onProviderSelect()">`;
+              }
+              html += '</td>';
+              html += '</tr>';
+          });
+          html += '</tbody></table>';
+          container.innerHTML = html;
+          
+          // Clear selections when re-rendered
+          state.sel_provider_model.clear();
+          renderVersionPanel(); // cascade clear
+      }
+      
       function renderProviderPanel() {
+          if (state.af == 'observations') {
+              renderObsProviderPanel();
+              return;
+          }
           const container = document.getElementById('provider-content');
           let html = '<table id="provider_table"><thead><tr><th>Provider / Model</th>';
           
@@ -832,13 +886,15 @@
           rows.forEach(rowVal => {
               // rowVal = af:sss:cccc:mm
               const parts = rowVal.split(':');
+              const sss = (state.af === 'observations') ? parts[1] : state.sss;
               const cccc = parts[2];
               const mm = parts[3];
               
               // Calculate valid columns
               let validCols = [];
               jsonData.arr_ii.forEach(ii => {
-                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) {
+                  const l = validate_cccc_mm_ii(state.af, sss, cccc, mm, ii);
+                  if (l) {
                       validCols.push(ii);
                   }
               });
@@ -901,10 +957,11 @@
           const rows = Array.from(state.sel_provider_model);
           rows.forEach(rowVal => {
               const parts = rowVal.split(':');
+              const sss = (state.af === 'observations') ? parts[1] : state.sss;
               const cccc = parts[2]; const mm = parts[3];
               let validCols = [];
               jsonData.arr_ii.forEach(ii => {
-                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) validCols.push(ii);
+                  if (validate_cccc_mm_ii(state.af, sss, cccc, mm, ii)) validCols.push(ii);
               });
               if (validCols.length === 1) {
                   newSet.add(`${rowVal}:${validCols[0]}`);
@@ -929,7 +986,6 @@
           for (let path of state.sel_version) {
               const p = path.split(':'); // af, sss, cccc, mm, ii
               const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
-              
               let varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
               if (af === 'derived') {
                   for (let jj of jsonData.arr_jj) {
@@ -990,6 +1046,8 @@
           let varList = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
           if (state.af === 'derived') {
               varList = [...new Set(jsonData.arr_ddvar.map(str => str.slice(0, -3)))];
+          } else if (state.af === 'observations') {
+              varList = (state.lvltype === 'sl') ? jsonData.arr_obssl : jsonData.arr_obspl;
           }
           
           let allDisabled = true;
@@ -1305,7 +1363,7 @@
           // Use cleanSplit here as well to avoid empty strings in checks
           const hasLvl = (lvl === '' || lvl === '*' || cleanSplit(varNode.lvllist).includes(lvl));
           const hasMon = (mon === '' || mon === '*' || cleanSplit(varNode.monlist).includes(mon));
-          const inProto = checkProtocol(varname, lvl);
+          const inProto = (af === 'observations') ? true : checkProtocol(varname, lvl);
 
           return hasLvl && hasMon && inProto;
       }
@@ -1319,6 +1377,12 @@
                   return `${varname}_${cccc}_sl_${mon}.grib2`;
               } else {
                   return `${varname}_${lvl}_${cccc}_pl_${mon}.grib2`;
+              }
+          } else if (af === 'observations') {
+              if (lvl === 'surface') {
+                  return `${varname}_${cccc}_${ii}_sl_${mon}.grib2`;
+              } else {
+                  return `${varname}_${lvl}_${cccc}_${ii}_pl_${mon}.grib2`;
               }
           } else if (af === 'forecasts') {
               if (state.lvltype === 'sl') {
@@ -1341,6 +1405,12 @@
                   return `${af}/${cccc}/`;
               } else { 
                   return `${af}/${cccc}/${varname}`;
+              }
+          } else if (af === 'observations') {
+              if (short) {
+                  return `${af}/${cccc}/${ii}/`;
+              } else { 
+                  return `${af}/${cccc}/${ii}/${varname}`;
               }
           } else {
               if (short) {
@@ -1407,7 +1477,7 @@
                       const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
                       const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
                       const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
-                      const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+                      const selLevelList = (state.sel_levels.length > 1 && state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
 
                       for (let l of selLevelList) {
                           for (let m of selMonthList) {
