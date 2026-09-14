@@ -262,6 +262,10 @@
                         <input type="radio" name="product_type" value="derived"> 
                         Derived
                     </label>
+                    <label>
+                        <input type="radio" name="product_type" value="observations"> 
+                        Observations
+                    </label>
                 </div>
             </div>
                         
@@ -386,13 +390,22 @@
             <!--     <textarea id="out-vpaths" readonly></textarea> -->
             <!-- </div> -->
 
-        <section class="license">
+        <section class="license" id="license-cc">
             <h3>Data Licensing</h3>
             <p>Data from WP-MIP are distributed under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">Creative Commons Attribution 4.0</a> licence. This allows you to access, use, adapt, and redistribute the data for any purpose, provided attribution is given.</p>
 
             <div class="citation">
                 <strong>Recommended attribution:</strong><br>
-                "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the CC-BY-4.0 license."
+                "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0 license</a>."
+            </div>
+        </section>
+        <section class="license" id="license-gpm" style="display:none;">
+            <h3>Data Licensing</h3>
+            <p>Data from WP-MIP are distributed under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">Creative Commons Attribution 4.0</a> licence. This allows you to access, use, adapt, and redistribute the data for any purpose, provided attribution is given.</p>
+
+            <div class="citation">
+                <strong>Recommended attribution:</strong><br>
+                "The NASA GPM IMERG dataset (G. Huffman, D. Bolvin, D. Braithwaite, K. Hsu, R. Joyce, P. Xie, 2014: Integrated Multi-satellitE Retrievals for GPM (IMERG), version 4.4. NASA's Precipitation Processing Center, accessed August 2026 <a href="ftp://arthurhou.pps.eosdis.nasa.gov/gpmdata/">ftp://arthurhou.pps.eosdis.nasa.gov/gpmdata/</a>) was provided by the NASA/Godard Space Flight Center. Modifications to the dataset - regridding from 0.1° to 0.25°, aggregation into 6-hourly precipitation accumulations, and GRIB2 encoding for the WP-MIP exchange format - were completed by Vanderlei Vargas (Cooperative Institute for Research in the Atmosphere (CIRA), Colorado State University, stationed at NOAA Global Systems Laboratory (GSL)), with contributions from Kathryn Newman, Christina Kalb, John Halley Gotway, and Michelle Harrold (NSF National Center for Atmospheric Research (NCAR)) and Gerard Ketefian (Cooperative Institute for Research in Environmental Sciences (CIRES), University of Colorado Boulder), for use in the WP-MIP system. The WP-MIP archive is made available under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0</a>, and the modifications made to the NASA GPM IMERG dataset are also available under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0</a>."
             </div>
         </section>
 
@@ -457,6 +470,9 @@
               jsonData.arr_ddvar = cleanSplit(jsonData.allddvar);
               jsonData.arr_lvl = cleanSplit(jsonData.alllvl).sort((a, b) => b - a);
               jsonData.arr_mon = cleanSplit(jsonData.allmon);
+              jsonData.arr_obspl = cleanSplit(jsonData.allobspl)
+              jsonData.arr_obssl = cleanSplit(jsonData.allobssl)
+              jsonData.arr_obspro = cleanSplit(jsonData.allobspro)
 
               // Initial Render
               updateProductType();  // Sets state af
@@ -572,10 +588,19 @@
               monPanel.style.display = 'block';
               lvlPanel.style.display = (state.lvltype === 'pl') ? 'block' : 'none';
           }
+          licenseCCdiv = document.getElementById('license-cc');
+          licenseGPMdiv = document.getElementById('license-gpm');
+          if (state.af === 'observations') {
+              licenseCCdiv.style.display = 'none';
+              licenseGPMdiv.style.display = 'block';
+          } else {
+              licenseCCdiv.style.display = 'block';
+              licenseGPMdiv.style.display = 'none';
+          }
        }
       
       function updateStreamType() {
-          if (state.af != 'analyses') {
+          if (state.af != 'analyses' && state.af != 'observations') {
               state.sss = document.querySelector('input[name="stream_type"]:checked').value;
           } else {
               state.sss = 'oic';
@@ -620,14 +645,16 @@
       }
 
       function renderLevelTypePanel() {
-          const afStates = ["analyses", "forecasts"];
+          const afStates = ["analyses", "forecasts", "observations"];
           const isAfDerived = (!afStates.includes(state.af));
+          const isAfObsSlOnly = (state.af == "observations" && jsonData.arr_obspl.length == 0);
           const container = document.getElementById('leveltype-content');
           const children = container.querySelectorAll('*');
+          if (isAfObsSlOnly) state.lvltype = 'sl';
           children.forEach(element => {
               if (element.tagName === 'LABEL') {
                   // if (element.id === 'label-sl') {
-                      element.className = (isAfDerived) ? 'disabled' : 'none'; 
+                  element.className = (isAfDerived || (element.id === 'label-pl' && isAfObsSlOnly)) ? 'disabled' : 'none'; 
                   // } else if (element.id === 'label-pl') {
                   //     element.className = (isAfDerived) ? 'disabled' : 'none'; 
                   // }
@@ -642,6 +669,7 @@
                           element.setAttribute('checked', 'true');
                       } else {
                           element.removeAttribute('checked');
+                          if (isAfObsSlOnly) element.setAttribute('disabled', 'true');
                       }
                   }
               }
@@ -695,7 +723,10 @@
           }
 
           const varList1 = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
-          const varList = (state.af === 'derived') ? jsonData.arr_ddvar : varList1;
+          let varList = (state.af === 'derived') ? jsonData.arr_ddvar : varList1;
+          if (state.af === 'observations') {
+              varList = (state.lvltype === 'sl') ? jsonData.arr_obssl : jsonData.arr_obspl;
+          }
           let isValid = false;
 
           // Check varnames
@@ -746,13 +777,59 @@
                   return jsonData.dico[key]+' <a href="https://github.com/WP-MIP/utils/wiki/'+name+'-Model-Descriptions">🗗🡕</a>';
               } else {
                    return jsonData.dico[key];
-             }
+              }
+          } else if (jsonData.obsdict[key]) {
+              const name = jsonData.obsdict[key]['long'].replace("/","_").replace(" ","");
+              if (addLink) {
+                  return jsonData.obsdict[key]['long']+' <a href="'+jsonData.obsdict[key]['href']+'">🗗🡕</a>';
+              } else {
+                   return jsonData.obsdict[key];
+              }
           } else {
               return key;
           }
       }
 
+      function renderObsProviderPanel() {
+          const container = document.getElementById('provider-content');
+          let html = '<table id="provider_table"><thead><tr>';
+          html += '<th>Provider</th><th>&nbsp;</th>';
+          html += '</tr></thead><tbody>';
+
+          const checked = (jsonData.arr_obspro.length == 1) ? "checked" : "";
+          // Rows: obspro
+          jsonData.arr_obspro.forEach(cccc => {
+              html += `<tr><td>${getLabel(cccc)}</td>`;
+              let valid = false;
+              for (const ii of jsonData.arr_ii) {
+                  valid = validate_cccc_mm_ii(state.af, '.', cccc, '.', ii);
+                  if (valid) break;
+              }
+              html += '<td>';
+              if (valid) {
+                  val = `${state.af}:.:${cccc}:.`;
+                  html += `<input type="checkbox" value="${val}" ${checked} onchange="onProviderSelect()">`;
+              }
+              html += '</td>';
+              html += '</tr>';
+          });
+          html += '</tbody></table>';
+          container.innerHTML = html;
+          
+          // Clear selections when re-rendered
+          if (checked) {
+              onProviderSelect();
+          } else {
+              state.sel_provider_model.clear();
+          }
+          renderVersionPanel(); // cascade clear
+      }
+      
       function renderProviderPanel() {
+          if (state.af == 'observations') {
+              renderObsProviderPanel();
+              return;
+          }
           const container = document.getElementById('provider-content');
           let html = '<table id="provider_table"><thead><tr><th>Provider / Model</th>';
           
@@ -832,13 +909,15 @@
           rows.forEach(rowVal => {
               // rowVal = af:sss:cccc:mm
               const parts = rowVal.split(':');
+              const sss = (state.af === 'observations') ? parts[1] : state.sss;
               const cccc = parts[2];
               const mm = parts[3];
               
               // Calculate valid columns
               let validCols = [];
               jsonData.arr_ii.forEach(ii => {
-                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) {
+                  const l = validate_cccc_mm_ii(state.af, sss, cccc, mm, ii);
+                  if (l) {
                       validCols.push(ii);
                   }
               });
@@ -901,10 +980,11 @@
           const rows = Array.from(state.sel_provider_model);
           rows.forEach(rowVal => {
               const parts = rowVal.split(':');
+              const sss = (state.af === 'observations') ? parts[1] : state.sss;
               const cccc = parts[2]; const mm = parts[3];
               let validCols = [];
               jsonData.arr_ii.forEach(ii => {
-                  if (validate_cccc_mm_ii(state.af, state.sss, cccc, mm, ii)) validCols.push(ii);
+                  if (validate_cccc_mm_ii(state.af, sss, cccc, mm, ii)) validCols.push(ii);
               });
               if (validCols.length === 1) {
                   newSet.add(`${rowVal}:${validCols[0]}`);
@@ -929,7 +1009,6 @@
           for (let path of state.sel_version) {
               const p = path.split(':'); // af, sss, cccc, mm, ii
               const af=p[0], sss=p[1], cccc=p[2], mm=p[3], ii=p[4];
-              
               let varNode = jsonData.data?.[af]?.[sss]?.[cccc]?.[mm]?.[ii]?.[varname];
               if (af === 'derived') {
                   for (let jj of jsonData.arr_jj) {
@@ -990,9 +1069,17 @@
           let varList = (state.lvltype === 'sl') ? jsonData.arr_slvar : jsonData.arr_plvar;
           if (state.af === 'derived') {
               varList = [...new Set(jsonData.arr_ddvar.map(str => str.slice(0, -3)))];
+          } else if (state.af === 'observations') {
+              varList = (state.lvltype === 'sl') ? jsonData.arr_obssl : jsonData.arr_obspl;
           }
           
           let allDisabled = true;
+          if (varList.length == 1) {
+              v = varList[0];
+              const isEnabled = checkTreeExistence(v) && checkProtocol(v, '');
+              if (isEnabled && !state.sel_vars.has(v)) state.sel_vars.add(v);
+          }
+          console.error(varList.length, state.sel_vars);
 
           let html = '';
           varList.forEach(v => {
@@ -1305,7 +1392,7 @@
           // Use cleanSplit here as well to avoid empty strings in checks
           const hasLvl = (lvl === '' || lvl === '*' || cleanSplit(varNode.lvllist).includes(lvl));
           const hasMon = (mon === '' || mon === '*' || cleanSplit(varNode.monlist).includes(mon));
-          const inProto = checkProtocol(varname, lvl);
+          const inProto = (af === 'observations') ? true : checkProtocol(varname, lvl);
 
           return hasLvl && hasMon && inProto;
       }
@@ -1319,6 +1406,12 @@
                   return `${varname}_${cccc}_sl_${mon}.grib2`;
               } else {
                   return `${varname}_${lvl}_${cccc}_pl_${mon}.grib2`;
+              }
+          } else if (af === 'observations') {
+              if (lvl === 'surface') {
+                  return `${varname}_${cccc}_${ii}_sl_${mon}.grib2`;
+              } else {
+                  return `${varname}_${lvl}_${cccc}_${ii}_pl_${mon}.grib2`;
               }
           } else if (af === 'forecasts') {
               if (state.lvltype === 'sl') {
@@ -1341,6 +1434,12 @@
                   return `${af}/${cccc}/`;
               } else { 
                   return `${af}/${cccc}/${varname}`;
+              }
+          } else if (af === 'observations') {
+              if (short) {
+                  return `${af}/${cccc}/${ii}/`;
+              } else { 
+                  return `${af}/${cccc}/${ii}/${varname}`;
               }
           } else {
               if (short) {
@@ -1407,7 +1506,7 @@
                       const varMonthList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['monlist']);
                       const selMonthList = (state.procotol != 'SP1' && state.sel_months.size >= varMonthList.length) ? ['*'] : state.sel_months ;
                       const varLevelList = cleanSplit(jsonData.data[af][sss][cccc][mm][ii][v]['lvllist']);
-                      const selLevelList = (state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
+                      const selLevelList = (state.sel_levels.length > 1 && state.procotol != 'SP1' && state.sel_levels.size >= varLevelList.length) ? ['*'] : state.sel_levels ;
 
                       for (let l of selLevelList) {
                           for (let m of selMonthList) {

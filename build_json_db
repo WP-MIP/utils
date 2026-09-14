@@ -3,6 +3,7 @@ basedir=~/public_html/WP-MIP
 dbanal=analyses
 dbfcst=forecasts
 dbderi=derived
+dbdobs=observations
 
 streams="${dbanal} ${dbfcst}/*"
 
@@ -44,18 +45,18 @@ varnames="'vardict':{
                      'orog':{'long':'Orography', 'units':'m', 'id':'228002'},
                      'wgnetc':{'long':'JMA WGNE TC Tracking', 'units':'', 'id':'', 'href':'https://journals.ametsoc.org/view/journals/bams/98/11/bams-d-16-0133.1.pdf'}
 }"
+obsdict="'obsdict':{
+               'gpm':{'long':'GPM IMERG', 'href':'https://gpm.nasa.gov/data/imerg'}
+}"
 
 
 # ==== dataset layout ====
-# /CCCC/MM_II/var/param+level+SSS_CCCC_MON_MM_II_LL.gib2
-# /analyses/     CCCC/     /var/{surfvar,var_level}_    LL_II.grib2
-# /forecasts/SSS/CCCC/MM_II/var/{surfvar,var_level}_SSS_LL_II.grib2
-
-# analyses/     cwao/      10u/      10u_          cwao_      sl_01.grib2
-# analyses/     cwao/      u/        u_1000_       cwao_      pl_01.grib2
-# forecasts/oic/cwao/pm_00/10u/      10u_      oic_cwao_pm_00_sl_01.grib2
-# forecasts/oic/cwao/pm_00/u/        u_1000_   oic_cwao_pm_00_pl_01.grib2
-# derived/  oic/cwao/pm_00/wgnetc_00/wgnetc_00_sic_egrr_pm_00.csv
+# observations/    gpm/    00/tp/       tp_           gpm_    00_sl_11.grib2
+# analyses/        cwao/      10u/      10u_          cwao_      sl_01.grib2
+# analyses/        cwao/      u/        u_1000_       cwao_      pl_01.grib2
+# forecasts   /oic/cwao/pm_00/10u/      10u_      oic_cwao_pm_00_sl_01.grib2
+# forecasts/   oic/cwao/pm_00/u/        u_1000_   oic_cwao_pm_00_pl_01.grib2
+# derived/     oic/cwao/pm_00/wgnetc_00/wgnetc_00_sic_egrr_pm_00.csv
 
 # SSS: Steam (analyses, oic:forecasts/oic, sic:forecasts/sic)
 # CCCC: center acronym
@@ -63,15 +64,73 @@ varnames="'vardict':{
 # II: Iteration number (from 0)
 # LL: Level Type (pl,sl)
 # MON: Month
-# JJ:  Derived var iteration number
+# JJ:  Derived var iteration number (from 0)
 
-apl=analyses/CCCC/VAR/VAR_LVL_CCCC_LL_MON.grib2
-asl=analyses/CCCC/VAR/VAR_CCCC_LL_MON.grib2
-fpl=forecasts/SSS/CCCC/MM_II/VAR/VAR_LVL_SSS_CCCC_MM_II_LL_MON.grib2
-fsl=forecasts/SSS/CCCC/MM_II/VAR/VAR_SSS_CCCC_MM_II_LL_MON.grib2
-ddd=derived/SSS/CCCC/MM_II/VAR_JJ/VAR_JJ_SSS_CCCC_MM_II.csv
+# obs=observations/ CCCC/   II/VAR/   VAR_        CCCC_   II_LL_MON.grib2
+# asl=analyses/     CCCC/      VAR/   VAR_        CCCC_      LL_MON.grib2
+# apl=analyses/     CCCC/      VAR/   VAR_LVL_    CCCC_      LL_MON.grib2
+# fsl=forecasts/SSS/CCCC/MM_II/VAR/   VAR_    SSS_CCCC_MM_II_LL_MON.grib2
+# fpl=forecasts/SSS/CCCC/MM_II/VAR/   VAR_LVL_SSS_CCCC_MM_II_LL_MON.grib2
+# ddd=derived/  SSS/CCCC/MM_II/VAR_JJ/VAR_JJ_ SSS_CCCC_MM_II.csv
 
-aaa="apl asl fpl fsl"
+# === observations Unique Values Per Field ===
+# VARsl:tp 
+# VARpl: 
+# LVL:  . 
+# SSS:  . 
+# CCCC: gpm 
+# MM:   . 
+# II:   00 
+# LL:   sl 
+# MON:  01 02 03 04 05 06 07 08 09 10 11 12 13 
+# JJ:   . 
+
+# === analyses Unique Values Per Field ===
+# VARsl:10u 10v 2sh 2t ci lsm msl sithick sp sst 
+# VARpl:gh q t u v 
+# LVL:  10 50 100 150 200 250 300 400 500 700 850 925 1000 
+# SSS:  . 
+# CCCC: cwao ecmf egrr kwbc rums 
+# MM:   . 
+# II:   . 
+# LL:   pl sl 
+# MON:  01 02 03 04 05 06 07 08 09 10 11 12 13 
+# JJ:   . 
+
+# VARsl:10u 10v 2sh 2t ci lsm msl sithick sp sst 
+# VARpl:gh q t u v 
+# LVL:  10 50 100 150 200 250 300 400 500 700 850 925 1000 
+# SSS:  oic 
+# CCCC: cwao ecmf egrr kwbc rums 
+# MM:   pm 
+# II:   00 
+# LL:   pl sl 
+# MON:  01 02 03 04 05 06 07 08 09 10 11 12 13 
+# JJ:   . 
+
+# === forecasts Unique Values Per Field ===
+# VARsl:10u 10v 2d 2sh 2t ci hcc lcc lsm mcc msl orog sithick slhf sp sshf ssr ssrd sst str strd tcc tisr tp tsr ttr 
+# VARpl:gh q t u v 
+# LVL:  1 10 20 30 50 70 100 150 200 250 300 400 500 600 700 850 925 1000 
+# SSS:  oic sic 
+# CCCC: babj cwao ecmf edzw egrr gfdl kwbc rjtd rksl rums sbsj 
+# MM:   ai hy pm 
+# II:   00 01 02 
+# LL:   pl sl 
+# MON:  01 02 03 04 05 06 07 08 09 10 11 12 
+# JJ:   . 
+
+# === derived Unique Values Per Field ===
+# VARsl:wgnetc_00 
+# VARpl: 
+# LVL:  . 
+# SSS:  oic 
+# CCCC: babj cwao ecmf edzw egrr gfdl kwbc rjtd rksl 
+# MM:   ai hy pm 
+# II:   00 01 
+# LL:   . 
+# MON:  . 
+# JJ:   00 
 
 mystderr() {
    if [[ ${debug:-0} == 1 ]] ; then
@@ -79,90 +138,14 @@ mystderr() {
    fi
 }
 
-getlist() {
-   (
-      cd ${basedir}/$1 && ls -1 || echo ""
-   )
-}
-getsss() {
-   _s=$1
-   if [[ x${_s} == xanalyses ]] ; then
-      echo oic
-   else
-      getlist ${_s}
-   fi
-}
-getcccc() {
-   _s=$1
-   _l=""
-   for _x in ${_s} ; do
-      _l="${_l} $(getlist ${_x})"
-   done
-   echo ${_l} | tr ' ' '\n' | sort -u
-}
-getmm() {
-   _s=$1
-   if [[ x${_s%%/*} == xanalyses ]] ; then
-      echo pm
-   else
-      getlist ${_s} | tr ' ' '\n' | cut -d_ -f1  | sort -u| tr '\n' ' '
-   fi
-}
-getii() {
-   _s=$1
-   _t=$2
-   if [[ x${_s%%/*} == xanalyses ]] ; then
-      echo 00
-   else
-      getlist ${_s} | grep ${_t}_ | tr ' ' '\n' | cut -d_ -f2  | sort -u| tr '\n' ' '
-   fi
+issubstrinlist() {
+   # _pattern=$1
+   # _list=$2
+   [[ "$2" == *"$1"* ]] && return 0
+   return 1
 }
 
-getvar() {
-   _s=$1
-   _t=$2
-   (
-      cd ${basedir}/${_s} && \
-      find . -type f -name "*_${_t}_??.grib2" | cut -d/ -f2 | sort -u
-   )
-}
-getddvar() {
-   _s=$1
-   (
-      cd ${basedir}/${_s} && \
-      find . -type f -name "*.csv" | cut -d/ -f2 | sort -u
-   )
-}
-
-getlvl() {
-   _s=$1
-   (
-      cd ${basedir}/${_s} && \
-      _v=${_s##*/} && \
-      ls ${_v}* | cut -d_ -f2 | sort -u
-   )
-}
-
-getmon() {
-   _s=$1
-   _l=$2
-   (
-      cd ${basedir}/${_s}
-      _v=${_s##*/}
-      if [[ x${_l} == x ]] ; then
-         _m=$(ls ${_v}* | cut -d_ -f4- | cut -d. -f1 | sort -u)
-      else
-         _m=$(ls ${_v}_${_l}* | cut -d_ -f4- | cut -d. -f1 | sort -u)
-      fi
-      _n=""
-      for _x in ${_m} ; do
-         _n="${_n} ${_x##*_}"
-      done
-      echo ${_n}
-   )
-}
-
-
+   
 json_content="{}"
 addtojson() {
    # if [[ ${debug:-0} == 1 ]] ; then return ; fi
@@ -171,6 +154,13 @@ addtojson() {
    _k='["'$(echo ${_p# } | sed 's/ /"]["/g')'"]'   
    json_content=$(echo "${json_content}" | jq ".${_k} = ${_d% }")
 }
+
+# outfile=~/local/internal/software/utils/toto1
+# rm -f ${outfile}
+# touch ${outfile}
+# addtojson() {
+#    echo $* >> ${outfile:-__scrap__}
+# }
 
 dicstr=""
 allsss=""
@@ -184,74 +174,231 @@ allmm=""
 allii=""
 alljj=""
 
-aflist="analyses forecasts derived"
+aflist="observations derived analyses forecasts"
+for AF in ${aflist} ; do
+   printf -- "---- Process $AF - Pass 1\n"
 
-for af in ${aflist} ; do
-   mystderr af=$af 
-   ssslist=$(getsss ${af})
-   allsss="${allsss} ${ssslist}"
-   for sss in ${ssslist} ; do
+   if [[ ${AF} == "derived" ]] ; then
+      flist=$(cd ${basedir}/${AF} && find . -type f -name '*.csv' -exec basename {} \; | cut -d. -f1)
+   else
+      flist=$(cd ${basedir}/${AF} && find . -type f -name '*.grib2' -exec basename {} \; | cut -d. -f1)
+      flistsl=$(echo ${flist} | tr ' ' '\n' | grep _sl_)
+      flistpl=$(echo ${flist} | tr ' ' '\n' | grep _pl_)
+   fi
+
+   unset u_LVL u_SSS u_MM u_II u_LL u_MON u_JJ
+   
+   if [[ ${AF} == "observations" ]] ; then
       
-      mystderr af=$af sss=$sss
-      sss1=$sss
-      if [[ ${af} == "analyses" ]] ; then sss1=.; fi
+      # obs=observations/ CCCC/   II/VAR/   VAR_        CCCC_   II_LL_MON.grib2
+      u_VARsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f1 | sort -u | tr '\n' ' ')
+      u_CCCCsl=$(echo ${flistsl} | tr ' ' '\n' | cut -d_ -f2 | sort -u)
+      u_IIsl=$(  echo ${flistsl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      # u_LLsl=$(echo ${flistsl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      u_MONsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f5 | sort -u)
+
+      # obs=observations/ CCCC/   II/VAR/   VAR_LVL     CCCC_   II_LL_MON.grib2
+      u_VARpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f1 | sort -u    | tr '\n' ' ')
+      u_LVL=$(   echo ${flistpl} | tr ' ' '\n' | cut -d_ -f2 | sort -u -n | tr '\n' ' ')
+      u_CCCCpl=$(echo ${flistpl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      u_IIpl=$(  echo ${flistpl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      # u_LLpl=$(echo ${flistpl} | tr ' ' '\n' | cut -d_ -f5 | sort -u)
+      u_MONpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f6 | sort -u)
+
+      # u_VARsl
+      # u_VARpl
+      u_LVL=${u_LVL# }
+      u_CCCC=$(echo ${u_CCCCsl} ${u_CCCCpl} | tr ' ' '\n' | sort -u | tr '\n' ' ')
+      u_II=$(  echo ${u_IIsl} ${u_IIpl}     | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
+      u_MON=$( echo ${u_MONsl} ${u_MONpl}   | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
+      u_LL="sl"
+      [[ "x${u_VARpl}" != "x" ]] && u_LL="sl pl"
+
+   elif [[ ${AF} == "analyses" ]] ; then
       
-      cccclist=$(getcccc ${af}/${sss1})
-      allcccc="${allcccc} ${cccclist}"
-      for cccc in ${cccclist} ; do
-         echo "+ Scanning: ${af}/${sss1}/${cccc}" 1>&2
-         
-         mmlist=$(getmm ${af}/${sss1}/${cccc})
-         mystderr af=$af sss=$sss cccc=$cccc : mmlist=${mmlist}
-         allmm="${allmm} ${mmlist}"
-         for mm in ${mmlist} ; do
-            
-            iilist=$(getii ${af}/${sss1}/${cccc} ${mm})
-            mystderr af=$af sss=$sss cccc=$cccc mm=$mm iilist=${iilist}
-            allii="${allii} ${iilist}"
-            for ii in ${iilist} ; do
+      # asl=analyses/     CCCC/      VAR/   VAR_        CCCC_      LL_MON.grib2
+      u_VARsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f1 | sort -u | tr '\n' ' ')
+      u_CCCCsl=$(echo ${flistsl} | tr ' ' '\n' | cut -d_ -f2 | sort -u)
+      # u_LL=$(  echo ${flistsl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      u_MONsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      
+      # apl=analyses/     CCCC/      VAR/   VAR_LVL_    CCCC_      LL_MON.grib2
+      u_VARpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f1 | sort -u    | tr '\n' ' ')
+      u_LVL=$(   echo ${flistpl} | tr ' ' '\n' | cut -d_ -f2 | sort -u -n | tr '\n' ' ')
+      u_CCCCpl=$(echo ${flistpl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      u_MM="pm"
+      # u_LL=$(  echo ${flistpl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      u_MONpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f5 | sort -u)
 
-               mmii=${mm}_${ii}
-               mmii1=${mmii}
-               if [[ ${af} == "analyses" ]] ; then mmii1=. ; fi
-               mystderr af=$af sss=$sss cccc=$cccc mm=$mm ii=$ii mmii=$mmii
+      u_SSS="oic"
+      u_CCCC=$(echo ${u_CCCCsl} ${u_CCCCpl} | tr ' ' '\n' | sort -u | tr '\n' ' ')
+      u_II="00"
+      u_MON=$( echo ${u_MONsl} ${u_MONpl}   | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
+      u_LL="sl pl"
+      
+   elif [[ ${AF} == "forecasts" ]] ; then
+      
+      # fsl=forecasts/SSS/CCCC/MM_II/VAR/   VAR_    SSS_CCCC_MM_II_LL_MON.grib2
+      u_VARsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f1 | sort -u | tr '\n' ' ')
+      u_SSSsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f2 | sort -u)
+      u_CCCCsl=$(echo ${flistsl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      u_MMsl=$(  echo ${flistsl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      u_IIsl=$(  echo ${flistsl} | tr ' ' '\n' | cut -d_ -f5 | sort -u)
+      # u_LL=$(  echo ${flistsl} | tr ' ' '\n' | cut -d_ -f6 | sort -u)
+      u_MONsl=$( echo ${flistsl} | tr ' ' '\n' | cut -d_ -f7 | sort -u)
+      
+      # fpl=forecasts/SSS/CCCC/MM_II/VAR/   VAR_LVL_SSS_CCCC_MM_II_LL_MON.grib2
+      u_VARpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f1 | sort -u    | tr '\n' ' ')
+      u_LVL=$(   echo ${flistpl} | tr ' ' '\n' | cut -d_ -f2 | sort -u -n | tr '\n' ' ')
+      u_SSSpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f3 | sort -u)
+      u_CCCCpl=$(echo ${flistpl} | tr ' ' '\n' | cut -d_ -f4 | sort -u)
+      u_MMpl=$(  echo ${flistpl} | tr ' ' '\n' | cut -d_ -f5 | sort -u)
+      u_IIpl=$(  echo ${flistpl} | tr ' ' '\n' | cut -d_ -f6 | sort -u)
+      # u_LL=$(  echo ${flistpl} | tr ' ' '\n' | cut -d_ -f7 | sort -u)
+      u_MONpl=$( echo ${flistpl} | tr ' ' '\n' | cut -d_ -f8 | sort -u)
+      
+      u_SSS=$( echo ${u_SSSsl} ${u_SSSpl}   | tr ' ' '\n' | sort -u    | tr '\n' ' ')
+      u_CCCC=$(echo ${u_CCCCsl} ${u_CCCCpl} | tr ' ' '\n' | sort -u    | tr '\n' ' ')
+      u_MM=$(  echo ${u_MMsl} ${u_MMpl}     | tr ' ' '\n' | sort -u    | tr '\n' ' ')
+      u_II=$(  echo ${u_IIsl} ${u_IIpl}     | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
+      u_MON=$( echo ${u_MONsl} ${u_MONpl}   | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
+      u_LL="sl pl"
 
+   elif [[ ${AF} == "derived" ]] ; then
+      
+      # ddd=derived/  SSS/CCCC/MM_II/VAR_JJ/VAR_JJ_ SSS_CCCC_MM_II.csv
+      u_VARsl=$( echo ${flist} | tr ' ' '\n' | cut -d_ -f1-2 | sort -u    | tr '\n' ' ')
+      u_JJ=$(    echo ${flist} | tr ' ' '\n' | cut -d_ -f2   | sort -u -n | tr '\n' ' ')
+      u_SSS=$(   echo ${flist} | tr ' ' '\n' | cut -d_ -f3   | sort -u    | tr '\n' ' ')
+      u_CCCC=$(  echo ${flist} | tr ' ' '\n' | cut -d_ -f4   | sort -u    | tr '\n' ' ')
+      u_MM=$(    echo ${flist} | tr ' ' '\n' | cut -d_ -f5   | sort -u    | tr '\n' ' ')
+      u_II=$(    echo ${flist} | tr ' ' '\n' | cut -d_ -f6   | sort -u -n | tr '\n' ' ')
+      
+   fi
+   
+   u_LVL=${u_LVL:-.}
+   if [[ "${u_LVL% }" != "." ]] ; then
+      u_LVL=$(echo  ${u_LVL}  | tr ' ' '\n' | grep -F -v -- '.' | tr '\n' ' ')
+   fi
+   u_SSS=${u_SSS:-.}
+   u_MM=${u_MM:-.}
+   u_II=${u_II:-.}
+   u_LL=${u_LL:-.}
+   u_MON=${u_MON:-.}
+   u_JJ=${u_JJ:-.}
+
+   echo "## ${AF} Unique Values Per Field"
+   echo "VARsl:${u_VARsl}"
+   echo "VARpl:${u_VARpl}"
+   echo "LVL:  ${u_LVL}"
+   echo "SSS:  ${u_SSS}"
+   echo "CCCC: ${u_CCCC}"
+   echo "MM:   ${u_MM}"
+   echo "II:   ${u_II}"
+   echo "LL:   ${u_LL}"
+   echo "MON:  ${u_MON}"     
+   echo "JJ:   ${u_JJ}"
+
+   if [[ ${AF} != "derived" ]] ; then
+      alllvl="${alllvl} ${u_LVL}"
+   fi
+   [[ "x${u_MON% }" != "x." ]] && allmon="${allmon} ${u_MON}"
+   if [[ ${AF} == "observations" ]] ; then
+      allobspl="${allobspl} ${u_VARpl}"
+      allobssl="${allobssl} ${u_VARsl}"
+      allobspro="${allobspro} ${u_CCCC}"
+   else
+      [[ "x${u_SSS% }" != "x." ]] && allsss="${allsss} ${u_SSS}"
+      allcccc="${allcccc} ${u_CCCC}"
+      [[ "x${u_MM% }" != "x." ]] && allmm="${allmm} ${u_MM}"
+      [[ "x${u_II% }" != "x." ]] && allii="${allii} ${u_II}"
+      if [[ ${AF} == "derived" ]] ; then
+         allddvar="${allddvar} ${u_VARsl} ${u_VARpl}"
+         alljj="${alljj} ${u_JJ}"
+      else
+         allplvar="${allplvar} ${u_VARpl}"
+         allslvar="${allslvar} ${u_VARsl}"
+      fi
+   fi
+   
+   printf -- "---- Process $AF - Pass 2\n"
+   # All idividual vars monlist and lvllist
+   for SSS in ${u_SSS} ; do
+      [[ ${SSS} != "." ]] && SSS1=${SSS}_ || SSS1=""
+      [[ ${AF} == "analyses" ]] && SSS=oic && SSS1=""
+      for CCCC in ${u_CCCC} ; do
+         echo "+ Scanning: ${AF}/${SSS}/${CCCC}" 1>&2
+         flist1=$(echo ${flist} | tr ' ' '\n' | grep -F ${SSS1}${CCCC} | tr '\n' ' ')
+         for MM in ${u_MM} ; do
+            [[ ${MM} != "." ]] && MM1=${MM}_ || MM1=""
+            [[ ${AF} == "analyses" ]] && MM=pm && MM1=""
+            for II in ${u_II} ; do
+               [[ ${II} != "." ]] && II1=${II}_ || II1=""
+               [[ ${AF} == "analyses" ]] && II=00 && II1=""
                
-               if [[ ${af} == "derived" ]] ; then
-                  plvarlist=""
-                  slvarlist=""
-                  ddvarlist=$(getddvar ${af}/${sss1}/${cccc}/${mmii1})
-                  allddvar="${allddvar} ${ddvarlist}"
-               else
-                  plvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} pl)
-                  allplvar="${allplvar} ${plvarlist}"
-                  slvarlist=$(getvar ${af}/${sss1}/${cccc}/${mmii1} sl)
-                  allslvar="${allslvar} ${slvarlist}"
-                  ddvarlist=""
-               fi
+               for VAR in ${u_VARsl} ; do
+                  lvllist=surface
+                  monlist=""
+                  if [[ ${AF} == "derived" ]] ; then
+                     LL1=
+                     LVL1=""
+                     lvllist="derived"
+                     fn=${VAR}_${LVL1}${SSS1}${CCCC}_${MM1}${II}${LL1}
+                     issubstrinlist ${fn} "${flist1}" && monlist="derived" # || echo NOT Found: ${fn} #"${flist1}" 
+                  else
+                     LL1=sl_
+                     LVL1=""
+                     for MON in ${u_MON} ; do
+                        [[ ${MON} != "." ]] && MON1=${MON} || MON1=""
+                        fn=${VAR}_${LVL1}${SSS1}${CCCC}_${MM1}${II1}${LL1}${MON1}
+                        issubstrinlist ${fn} "${flist1}" && monlist="${monlist} ${MON1}" # || echo MONsl NOT Found: ${fn} #"${flist1}" 
+                     done #MON
+                  fi
+                  if [[ "x${monlist# }" != "x" ]] ; then
+                     monlist=$(echo ${monlist} | tr ' ' '\n' | sort -n -u | tr '\n' ' ')
+                     addtojson data:${AF}:${SSS}:${CCCC}:${MM}:${II}:${VAR}:lvllist "${lvllist}"
+                     addtojson data:${AF}:${SSS}:${CCCC}:${MM}:${II}:${VAR}:monlist "${monlist}"
+                  fi
+               done #VAR sl
+               
+               for VAR in ${u_VARpl} ; do
+                  lvllist=""
+                  monlist=""
+                  if [[ ${AF} == "derived" ]] ; then
+                     LL1=
+                     LVL1=""
+                     lvllist="derived"
+                     fn=${VAR}_${LVL1}${SSS1}${CCCC}_${MM1}${II}${LL1}
+                     issubstrinlist ${fn} "${flist1}" && monlist="derived" # || echo derived MON NOT Found: ${fn} #"${flist1}" 
+                  else
+                     LL1=pl_
+                     for LVL in ${u_LVL} ; do
+                        fn=${VAR}_${LVL}_${SSS1}${CCCC}_${MM1}${II1}${LL1}
+                        issubstrinlist ${fn} "${flist1}" && lvllist="${lvllist} ${LVL}" # || echo LVL NOT Found: ${fn} #"${flist1}" 
+                     done #LVL
+                     lvllist=${lvllist# }
+                     lvllist=${lvllist% }
+                     for MON in ${u_MON} ; do
+                        LVL=${lvllist##* }
+                        [[ ${MON} != "." ]] && MON1=${MON} || MON1=""
+                        fn=${VAR}_${LVL}_${SSS1}${CCCC}_${MM1}${II1}${LL1}${MON1}
+                        issubstrinlist ${fn} "${flist1}" && monlist="${monlist} ${MON1}" # || echo MONpl NOT Found: ${fn} #"${flist1}" 
+                     done #MON
+                  fi
+                  if [[ "x${monlist# }" != "x" && "x${lvllist# }" != "x" ]] ; then
+                     monlist=$(echo ${monlist} | tr ' ' '\n' | sort -n -u | tr '\n' ' ')
+                     addtojson data:${AF}:${SSS}:${CCCC}:${MM}:${II}:${VAR}:lvllist "${lvllist}"
+                     addtojson data:${AF}:${SSS}:${CCCC}:${MM}:${II}:${VAR}:monlist "${monlist}"
+                  fi
+               done #VAR pl
+               
+            done #II
+         done #MM
+      done #CCCC
+   done #SSS
+done #AF
 
-               for var in ${plvarlist} ; do
-                  lvllist=$(getlvl ${af}/${sss1}/${cccc}/${mmii1}/${var})
-                  alllvl="${alllvl} ${lvllist}"
-                  monlist=$(getmon ${af}/${sss1}/${cccc}/${mmii1}/${var})
-                  allmon="${allmon} ${monlist}"
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "${lvllist}"
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "${monlist}"
-               done
-               for var in ${slvarlist} ; do
-                  monlist=$(getmon ${af}/${sss1}/${cccc}/${mmii1}/${var})
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "surface"
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "${monlist}"
-               done
-               for var in ${ddvarlist} ; do
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:lvllist "derived"
-                  addtojson data:${af}:${sss}:${cccc}:${mm}:${ii}:${var}:monlist "derived"
-               done
-            done
-         done
-      done
-   done
-done
+printf -- "---- Add compiled list of values \n"
 
 allsss="$(echo ${allsss}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allcccc="$(echo ${allcccc}   | tr ' ' '\n' | sort -u | tr '\n' ' ')"
@@ -259,14 +406,17 @@ allmm="$(echo ${allmm}       | tr ' ' '\n' | sort -r -u | tr '\n' ' ')"
 allii="$(echo ${allii}       | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allplvar="$(echo ${allplvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allslvar="$(echo ${allslvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
-alllvl="$(echo ${alllvl}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+alllvl="$(echo ${alllvl}     | tr ' ' '\n' | grep -F -v '.'  | sort -u | tr '\n' ' ')"
 allmon="$(echo ${allmon}     | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 allddvar="$(echo ${allddvar} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 for v in ${allddvar} ; do
    jj=${v#*_}
    alljj="${alljj} ${jj}"
 done
-alljj="$(echo ${alljj}       | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+alljj="$(echo ${alljj}         | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allobspl="$(echo ${allobspl}   | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allobssl="$(echo ${allobssl}   | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+allobspro="$(echo ${allobspro} | tr ' ' '\n' | sort -u | tr '\n' ' ')"
 
 addtojson alllvltyp "surface pressure"
 addtojson allaf "${aflist}"
@@ -280,10 +430,9 @@ addtojson alllvl "${alllvl}"
 addtojson allmon "${allmon}"
 addtojson alljj "${alljj}"
 addtojson allddvar "${allddvar}"
-
-# addtojson prodlist "${allsss}"
-# addtojson cntrlist "${allcccc}"
-# addtojson typelist "${allmmii}"
+addtojson allobspl "${allobspl}"
+addtojson allobssl "${allobssl}"
+addtojson allobspro "${allobspro}"
 
 for x in ${contribs} ${models} ${streamtype} ${lvltyp} ; do
    addtojson  "dico:${x%:*}" "${x#*:}"
@@ -295,15 +444,17 @@ for x in $(cat ~/public_html/sp.tbl | tr ' ' ':') ; do
    addtojson "protocol:${p#*/}" "${v% }"
 done
 
+printf -- "---- Write DB file\n"
+
 json_content=$(echo ${json_content} | tr '\n' ' ')
 # jfile0=~/public_html/content2.json
 jfile0=~/public_html/content.json
 jfile1=${jfile0}-$(date '+%Y%m%d.%H%M%S')
-echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"')}" > ${jfile1}
+echo "${json_content%\}*}, $(echo ${varnames} | tr "'" '"'), $(echo ${obsdict} | tr "'" '"')}" > ${jfile1}
 rm -f ${jfile0} && ln -sf ${jfile1} ${jfile0}
 archive_dir=~swpm001/public_html/archive
 mkdir -p ${archive_dir} 2>/dev/null || true
-oldfiles=$(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ')
+oldfiles=$(ls -1 ${jfile0}-* | grep -F -v ${jfile1} | tr '\n' ' ')
 if [[ "x${oldfiles}" != "x" ]] ; then
-   mv $(ls -1 ${jfile0}-* | grep -v ${jfile1} | tr '\n' ' ') ${archive_dir} || true
+   mv $(ls -1 ${jfile0}-* | grep -F -v ${jfile1} | tr '\n' ' ') ${archive_dir} || true
 fi
