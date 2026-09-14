@@ -390,13 +390,22 @@
             <!--     <textarea id="out-vpaths" readonly></textarea> -->
             <!-- </div> -->
 
-        <section class="license">
+        <section class="license" id="license-cc">
             <h3>Data Licensing</h3>
             <p>Data from WP-MIP are distributed under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">Creative Commons Attribution 4.0</a> licence. This allows you to access, use, adapt, and redistribute the data for any purpose, provided attribution is given.</p>
 
             <div class="citation">
                 <strong>Recommended attribution:</strong><br>
-                "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the CC-BY-4.0 license."
+                "The data from [CONTRIBUTOR LIST] used in this work were distributed by the Weather Prediction Model Intercomparison Project (<a href="https://www.wcrp-esmo.org/activities/wp-mip">https://www.wcrp-esmo.org/activities/wp-mip</a>) under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0 license</a>."
+            </div>
+        </section>
+        <section class="license" id="license-gpm" style="display:none;">
+            <h3>Data Licensing</h3>
+            <p>Data from WP-MIP are distributed under the <a href="https://creativecommons.org/licenses/by/4.0/deed.en">Creative Commons Attribution 4.0</a> licence. This allows you to access, use, adapt, and redistribute the data for any purpose, provided attribution is given.</p>
+
+            <div class="citation">
+                <strong>Recommended attribution:</strong><br>
+                "The NASA GPM IMERG dataset (G. Huffman, D. Bolvin, D. Braithwaite, K. Hsu, R. Joyce, P. Xie, 2014: Integrated Multi-satellitE Retrievals for GPM (IMERG), version 4.4. NASA's Precipitation Processing Center, accessed August 2026 <a href="ftp://arthurhou.pps.eosdis.nasa.gov/gpmdata/">ftp://arthurhou.pps.eosdis.nasa.gov/gpmdata/</a>) was provided by the NASA/Godard Space Flight Center. Modifications to the dataset - regridding from 0.1° to 0.25°, aggregation into 6-hourly precipitation accumulations, and GRIB2 encoding for the WP-MIP exchange format - were completed by Vanderlei Vargas (Cooperative Institute for Research in the Atmosphere (CIRA), Colorado State University, stationed at NOAA Global Systems Laboratory (GSL)), with contributions from Kathryn Newman, Christina Kalb, John Halley Gotway, and Michelle Harrold (NSF National Center for Atmospheric Research (NCAR)) and Gerard Ketefian (Cooperative Institute for Research in Environmental Sciences (CIRES), University of Colorado Boulder), for use in the WP-MIP system. The WP-MIP archive is made available under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0</a>, and the modifications made to the NASA GPM IMERG dataset are also available under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC-BY-4.0</a>."
             </div>
         </section>
 
@@ -578,6 +587,15 @@
           } else {
               monPanel.style.display = 'block';
               lvlPanel.style.display = (state.lvltype === 'pl') ? 'block' : 'none';
+          }
+          licenseCCdiv = document.getElementById('license-cc');
+          licenseGPMdiv = document.getElementById('license-gpm');
+          if (state.af === 'observations') {
+              licenseCCdiv.style.display = 'none';
+              licenseGPMdiv.style.display = 'block';
+          } else {
+              licenseCCdiv.style.display = 'block';
+              licenseGPMdiv.style.display = 'none';
           }
        }
       
@@ -778,6 +796,7 @@
           html += '<th>Provider</th><th>&nbsp;</th>';
           html += '</tr></thead><tbody>';
 
+          const checked = (jsonData.arr_obspro.length == 1) ? "checked" : "";
           // Rows: obspro
           jsonData.arr_obspro.forEach(cccc => {
               html += `<tr><td>${getLabel(cccc)}</td>`;
@@ -789,7 +808,7 @@
               html += '<td>';
               if (valid) {
                   val = `${state.af}:.:${cccc}:.`;
-                  html += `<input type="checkbox" value="${val}" onchange="onProviderSelect()">`;
+                  html += `<input type="checkbox" value="${val}" ${checked} onchange="onProviderSelect()">`;
               }
               html += '</td>';
               html += '</tr>';
@@ -798,7 +817,11 @@
           container.innerHTML = html;
           
           // Clear selections when re-rendered
-          state.sel_provider_model.clear();
+          if (checked) {
+              onProviderSelect();
+          } else {
+              state.sel_provider_model.clear();
+          }
           renderVersionPanel(); // cascade clear
       }
       
@@ -1051,6 +1074,12 @@
           }
           
           let allDisabled = true;
+          if (varList.length == 1) {
+              v = varList[0];
+              const isEnabled = checkTreeExistence(v) && checkProtocol(v, '');
+              if (isEnabled && !state.sel_vars.has(v)) state.sel_vars.add(v);
+          }
+          console.error(varList.length, state.sel_vars);
 
           let html = '';
           varList.forEach(v => {
